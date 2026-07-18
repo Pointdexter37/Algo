@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
-import MarkSolvedButton from "@/components/MarkSolvedButton"
+import MarkSolvedModal from "@/components/MarkSolvedModal"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 
@@ -19,12 +19,20 @@ export default async function ProblemsPage() {
 
   // Fetch solved problem IDs for the current user
   let solvedProblemIds = new Set<string>()
+  let dueProblemIds = new Set<string>()
   if (userId) {
-    const submissions = await prisma.submission.findMany({
-      where: { userId, status: "Accepted" },
-      select: { problemId: true }
+    const progress = await prisma.userProgress.findMany({
+      where: { userId },
+      select: { problemId: true, nextReviewDate: true }
     })
-    submissions.forEach(s => solvedProblemIds.add(s.problemId))
+    
+    const now = new Date()
+    progress.forEach(p => {
+      solvedProblemIds.add(p.problemId)
+      if (p.nextReviewDate && p.nextReviewDate <= now) {
+        dueProblemIds.add(p.problemId)
+      }
+    })
   }
 
   return (
@@ -60,9 +68,10 @@ export default async function ProblemsPage() {
                     className="group hover:bg-white/[0.02] transition-colors duration-200"
                   >
                     <td className="px-6 py-4">
-                      <MarkSolvedButton 
+                      <MarkSolvedModal 
                         problemId={problem.id} 
                         isSolved={solvedProblemIds.has(problem.id)} 
+                        isDue={dueProblemIds.has(problem.id)}
                       />
                     </td>
                     <td className="px-6 py-4">
