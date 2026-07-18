@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
+import { calculateSM2 } from "@/lib/sm2"
 import { revalidatePath } from "next/cache"
 
 export async function markProblemAsSolved(problemId: string, timeSpent: number, difficultyRating: number) {
@@ -24,8 +25,27 @@ export async function markProblemAsSolved(problemId: string, timeSpent: number, 
     }
   })
 
-  // 2. Update or Create UserProgress
-  // We're setting up the foundation here. In Phase 3, we will add the real SM-2 algorithm logic to calculate interval and nextReviewDate.
+  // 2. Update or Create UserProgress using SM-2
+  const existingProgress = await prisma.userProgress.findUnique({
+    where: {
+      userId_problemId: { userId, problemId }
+    }
+  });
+
+  const currentRepetitions = existingProgress?.repetitions ?? 0;
+  const currentEaseFactor = existingProgress?.easeFactor ?? 2.5;
+  const currentInterval = existingProgress?.interval ?? 0;
+
+  const { nextInterval, nextRepetitions, nextEaseFactor } = calculateSM2(
+    difficultyRating,
+    currentRepetitions,
+    currentEaseFactor,
+    currentInterval
+  );
+
+  const nextReviewDate = new Date();
+  nextReviewDate.setDate(nextReviewDate.getDate() + nextInterval);
+
   await prisma.userProgress.upsert({
     where: {
       userId_problemId: {
@@ -35,15 +55,19 @@ export async function markProblemAsSolved(problemId: string, timeSpent: number, 
     },
     update: {
       difficultyRating,
-      repetitions: { increment: 1 },
+      repetitions: nextRepetitions,
+      interval: nextInterval,
+      easeFactor: nextEaseFactor,
+      nextReviewDate,
     },
     create: {
       userId,
       problemId,
       difficultyRating,
-      repetitions: 1,
-      interval: 1,
-      easeFactor: 2.5,
+      repetitions: nextRepetitions,
+      interval: nextInterval,
+      easeFactor: nextEaseFactor,
+      nextReviewDate,
     }
   })
 
