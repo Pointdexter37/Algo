@@ -1,15 +1,31 @@
 import { prisma } from "@/lib/prisma"
 import Link from "next/link"
+import MarkSolvedButton from "@/components/MarkSolvedButton"
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/lib/auth"
 
 export default async function ProblemsPage() {
+  const session = await getServerSession(authOptions)
+  // @ts-ignore
+  const userId = session?.user?.id as string | undefined
+
   // Fetch problems from the database
-  // We'll sort them by leetcodeId ascending
   const problems = await prisma.problem.findMany({
     orderBy: {
       leetcodeId: 'asc'
     },
     take: 100 // Limit for now to prevent massive payloads
   })
+
+  // Fetch solved problem IDs for the current user
+  let solvedProblemIds = new Set<string>()
+  if (userId) {
+    const submissions = await prisma.submission.findMany({
+      where: { userId, status: "Accepted" },
+      select: { problemId: true }
+    })
+    submissions.forEach(s => solvedProblemIds.add(s.problemId))
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-zinc-300 p-8 font-sans selection:bg-indigo-500/30">
@@ -44,10 +60,10 @@ export default async function ProblemsPage() {
                     className="group hover:bg-white/[0.02] transition-colors duration-200"
                   >
                     <td className="px-6 py-4">
-                      {/* Placeholder for solved status */}
-                      <div className="w-6 h-6 rounded-full border-2 border-zinc-700 group-hover:border-indigo-500/50 transition-colors flex items-center justify-center">
-                        <span className="w-2 h-2 rounded-full bg-transparent group-hover:bg-indigo-500/50 transition-colors" />
-                      </div>
+                      <MarkSolvedButton 
+                        problemId={problem.id} 
+                        isSolved={solvedProblemIds.has(problem.id)} 
+                      />
                     </td>
                     <td className="px-6 py-4">
                       <Link 
