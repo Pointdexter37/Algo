@@ -6,8 +6,7 @@ import { authOptions } from "@/lib/auth"
 
 export default async function ProblemsPage() {
   const session = await getServerSession(authOptions)
-  // @ts-ignore
-  const userId = session?.user?.id as string | undefined
+  const userId = session?.user?.id
 
   // Fetch problems from the database
   const problems = await prisma.problem.findMany({
@@ -48,6 +47,12 @@ export default async function ProblemsPage() {
             Master these coding challenges to ace your next technical interview. Handpicked problems with personalized spaced repetition.
           </p>
         </header>
+
+        {!userId && (
+          <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/10 px-5 py-4 text-sm text-indigo-200">
+            Sign in to track solved problems and schedule reviews. You can still browse the library without an account.
+          </div>
+        )}
 
         {/* Problems List */}
         <div className="bg-[#111111] border border-white/5 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl">
