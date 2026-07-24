@@ -4,6 +4,28 @@ import MarkSolvedModal from "@/components/MarkSolvedModal"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 
+function getDifficultyRank(difficulty: string) {
+  if (difficulty === "Easy") return 0
+  if (difficulty === "Medium") return 1
+  return 2
+}
+
+function getTopTopics(items: { topicTags: string }[], limit = 3) {
+  const counts = new Map<string, number>()
+
+  for (const item of items) {
+    // Keep the topic math intentionally simple: we split the stored tags and count
+    // how often each one appears in the user's current review/learning queue.
+    for (const tag of item.topicTags.split(", ").filter(Boolean)) {
+      counts.set(tag, (counts.get(tag) ?? 0) + 1)
+    }
+  }
+
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, limit)
+}
+
 export default async function ProblemsPage() {
   const session = await getServerSession(authOptions)
   const userId = session?.user?.id
@@ -17,14 +39,16 @@ export default async function ProblemsPage() {
   })
 
   // Fetch solved problem IDs for the current user
-  let solvedProblemIds = new Set<string>()
-  let dueProblemIds = new Set<string>()
+  const solvedProblemIds = new Set<string>()
+  const dueProblemIds = new Set<string>()
+  let solvedCount = 0
+  let dueCount = 0
   if (userId) {
     const progress = await prisma.userProgress.findMany({
       where: { userId },
       select: { problemId: true, nextReviewDate: true }
     })
-    
+
     const now = new Date()
     progress.forEach(p => {
       solvedProblemIds.add(p.problemId)
@@ -32,7 +56,64 @@ export default async function ProblemsPage() {
         dueProblemIds.add(p.problemId)
       }
     })
+    solvedCount = solvedProblemIds.size
+    dueCount = dueProblemIds.size
   }
+
+  const recommendation = (() => {
+    if (userId) {
+      const dueProblems = problems
+        .filter((problem) => dueProblemIds.has(problem.id))
+        .sort((a, b) => {
+          const leftDate = a.updatedAt.getTime()
+          const rightDate = b.updatedAt.getTime()
+          if (leftDate !== rightDate) return leftDate - rightDate
+          return a.leetcodeId - b.leetcodeId
+        })
+
+      if (dueProblems.length > 0) {
+        return {
+          problem: dueProblems[0],
+          title: "Review due now",
+          description: "This problem is ready for another pass based on your spaced-repetition schedule.",
+        }
+      }
+
+      const nextProblems = problems
+        .filter((problem) => !solvedProblemIds.has(problem.id))
+        .sort((a, b) => {
+          const difficultyDiff = getDifficultyRank(a.difficulty) - getDifficultyRank(b.difficulty)
+          if (difficultyDiff !== 0) return difficultyDiff
+          return a.leetcodeId - b.leetcodeId
+        })
+
+      if (nextProblems.length > 0) {
+        return {
+          problem: nextProblems[0],
+          title: "Recommended next",
+          description: "You have no reviews due right now, so this is the best unsolved problem to tackle next.",
+        }
+      }
+
+      return {
+        problem: null,
+        title: "You are caught up",
+        description: "Every tracked problem is either solved or not yet due for review.",
+      }
+    }
+
+    return {
+      problem: problems[0] ?? null,
+      title: "Sign in for recommendations",
+      description: "Create an account to get a personalized next-problem recommendation and due-review tracking.",
+    }
+  })()
+
+  const topicSource = userId
+    ? problems.filter((problem) => dueProblemIds.has(problem.id) || !solvedProblemIds.has(problem.id))
+    : problems
+
+  const topTopics = getTopTopics(topicSource)
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-zinc-300 p-8 font-sans selection:bg-indigo-500/30">
@@ -47,6 +128,98 @@ export default async function ProblemsPage() {
             Master these coding challenges to ace your next technical interview. Handpicked problems with personalized spaced repetition.
           </p>
         </header>
+
+        {userId && (
+          <section className="grid gap-4 md:grid-cols-[1.6fr_1fr_1fr]">
+            <div className="rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-500/15 via-white/[0.03] to-cyan-500/10 p-5 shadow-xl shadow-indigo-500/5">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-300">
+                {recommendation.title}
+              </p>
+              <div className="mt-3 flex items-start justify-between gap-4">
+                <div>
+                  {recommendation.problem ? (
+                    <>
+                      <h2 className="text-2xl font-bold text-white">
+                        {recommendation.problem.leetcodeId}. {recommendation.problem.title}
+                      </h2>
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-300">
+                        {recommendation.description}
+                      </p>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-300">
+                          {recommendation.problem.difficulty}
+                        </span>
+                        <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-300">
+                          {recommendation.problem.topicTags.split(", ")[0]}
+                        </span>
+                        <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-300">
+                          {dueProblemIds.has(recommendation.problem.id) ? "Due now" : "Next up"}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h2 className="text-2xl font-bold text-white">{recommendation.title}</h2>
+                      <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-300">
+                        {recommendation.description}
+                      </p>
+                    </>
+                  )}
+                </div>
+                {recommendation.problem && (
+                  <Link
+                    href={recommendation.problem.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="shrink-0 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-zinc-950 transition-colors hover:bg-zinc-200"
+                  >
+                    Open problem
+                  </Link>
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+                Solved
+              </p>
+              <p className="mt-3 text-3xl font-bold text-white">{solvedCount}</p>
+              <p className="mt-2 text-sm text-zinc-400">Problems tracked in your progress history.</p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+                Due now
+              </p>
+              <p className="mt-3 text-3xl font-bold text-white">{dueCount}</p>
+              <p className="mt-2 text-sm text-zinc-400">Items that are ready for review today.</p>
+            </div>
+          </section>
+        )}
+
+        {topTopics.length > 0 && (
+          <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+              Topic focus
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              {topTopics.map(([topic, count]) => (
+                <span
+                  key={topic}
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-zinc-200"
+                >
+                  {topic}
+                  <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-zinc-400">
+                    {count}
+                  </span>
+                </span>
+              ))}
+            </div>
+            <p className="mt-3 text-sm text-zinc-400">
+              These are the topics showing up most often in your current queue.
+            </p>
+          </section>
+        )}
 
         {!userId && (
           <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/10 px-5 py-4 text-sm text-indigo-200">
