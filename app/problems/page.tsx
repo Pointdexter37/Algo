@@ -26,6 +26,48 @@ function getTopTopics(items: { topicTags: string }[], limit = 3) {
     .slice(0, limit)
 }
 
+function getProblemTopicScore(
+  problem: { topicTags: string; difficulty: string },
+  topicWeakness = new Map<string, number>(),
+) {
+  const baseWeight = getDifficultyRank(problem.difficulty) + 1
+  const tags = problem.topicTags.split(", ").filter(Boolean)
+
+  // Problems tied to weak topics get a larger score, and harder problems get a small bump.
+  return tags.reduce((score, tag) => score + (topicWeakness.get(tag) ?? 0) + baseWeight, 0)
+}
+
+function getTopScoredTopics(scores: Map<string, number>, limit = 3) {
+  return Array.from(scores.entries())
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, limit)
+}
+
+function getTopicWeaknessScores(
+  problems: { id: string; topicTags: string; difficulty: string }[],
+  dueProblemIds: Set<string>,
+  solvedProblemIds: Set<string>,
+) {
+  const scores = new Map<string, number>()
+
+  for (const problem of problems) {
+    const isDue = dueProblemIds.has(problem.id)
+    const isSolved = solvedProblemIds.has(problem.id)
+
+    // Due problems matter most. Unsolved problems still count, but with a lower weight.
+    const weight = isDue ? 4 : isSolved ? 0 : 1
+    if (weight === 0) continue
+
+    const difficultyWeight = getDifficultyRank(problem.difficulty) + 1
+
+    for (const tag of problem.topicTags.split(", ").filter(Boolean)) {
+      scores.set(tag, (scores.get(tag) ?? 0) + weight + difficultyWeight)
+    }
+  }
+
+  return scores
+}
+
 export default async function ProblemsPage() {
   const session = await getServerSession(authOptions)
   const userId = session?.user?.id
@@ -60,11 +102,20 @@ export default async function ProblemsPage() {
     dueCount = dueProblemIds.size
   }
 
+  const activeProblems = userId
+    ? problems.filter((problem) => dueProblemIds.has(problem.id) || !solvedProblemIds.has(problem.id))
+    : problems
+  const topicWeakness = userId
+    ? getTopicWeaknessScores(activeProblems, dueProblemIds, solvedProblemIds)
+    : new Map<string, number>()
+
   const recommendation = (() => {
     if (userId) {
       const dueProblems = problems
         .filter((problem) => dueProblemIds.has(problem.id))
         .sort((a, b) => {
+          const scoreDiff = getProblemTopicScore(b, topicWeakness) - getProblemTopicScore(a, topicWeakness)
+          if (scoreDiff !== 0) return scoreDiff
           const leftDate = a.updatedAt.getTime()
           const rightDate = b.updatedAt.getTime()
           if (leftDate !== rightDate) return leftDate - rightDate
@@ -82,6 +133,8 @@ export default async function ProblemsPage() {
       const nextProblems = problems
         .filter((problem) => !solvedProblemIds.has(problem.id))
         .sort((a, b) => {
+          const scoreDiff = getProblemTopicScore(b, topicWeakness) - getProblemTopicScore(a, topicWeakness)
+          if (scoreDiff !== 0) return scoreDiff
           const difficultyDiff = getDifficultyRank(a.difficulty) - getDifficultyRank(b.difficulty)
           if (difficultyDiff !== 0) return difficultyDiff
           return a.leetcodeId - b.leetcodeId
@@ -109,11 +162,7 @@ export default async function ProblemsPage() {
     }
   })()
 
-  const topicSource = userId
-    ? problems.filter((problem) => dueProblemIds.has(problem.id) || !solvedProblemIds.has(problem.id))
-    : problems
-
-  const topTopics = getTopTopics(topicSource)
+  const topTopics = userId ? getTopScoredTopics(topicWeakness) : getTopTopics(problems)
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-zinc-300 p-8 font-sans selection:bg-indigo-500/30">
