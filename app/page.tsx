@@ -42,6 +42,12 @@ export default function Home() {
               Open problem library
             </Link>
             <Link
+              href="/dashboard"
+              className="inline-flex items-center rounded-lg border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/10"
+            >
+              Open dashboard
+            </Link>
+            <Link
               href="/onboarding"
               className="inline-flex items-center rounded-lg border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/10"
             >
