@@ -43,6 +43,40 @@ function getTopScoredTopics(scores: Map<string, number>, limit = 3) {
     .slice(0, limit)
 }
 
+function getDateKey(date: Date) {
+  // Use the user's calendar day, not the server's raw timestamp.
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata",
+  }).format(date)
+}
+
+function shiftDateKey(dateKey: string, days: number) {
+  const date = new Date(`${dateKey}T00:00:00.000Z`)
+  date.setUTCDate(date.getUTCDate() - days)
+  return date.toISOString().slice(0, 10)
+}
+
+function getCurrentStreak(submittedAtList: Date[]) {
+  const uniqueDays = new Set(submittedAtList.map(getDateKey))
+  if (uniqueDays.size === 0) {
+    return { currentStreak: 0, lastActiveDate: null }
+  }
+
+  const sortedDays = Array.from(uniqueDays).sort().reverse()
+  let currentStreak = 0
+  let cursor = sortedDays[0]
+
+  while (uniqueDays.has(cursor)) {
+    currentStreak += 1
+    cursor = shiftDateKey(cursor, 1)
+  }
+
+  return {
+    currentStreak,
+    lastActiveDate: sortedDays[0],
+  }
+}
+
 function getTopicWeaknessScores(
   problems: { id: string; topicTags: string; difficulty: string }[],
   dueProblemIds: Set<string>,
@@ -85,10 +119,17 @@ export default async function ProblemsPage() {
   const dueProblemIds = new Set<string>()
   let solvedCount = 0
   let dueCount = 0
+  let studyStreak = 0
+  let lastActiveDate: string | null = null
   if (userId) {
     const progress = await prisma.userProgress.findMany({
       where: { userId },
       select: { problemId: true, nextReviewDate: true }
+    })
+    const submissions = await prisma.submission.findMany({
+      where: { userId },
+      select: { submittedAt: true },
+      orderBy: { submittedAt: "desc" },
     })
 
     const now = new Date()
@@ -100,6 +141,10 @@ export default async function ProblemsPage() {
     })
     solvedCount = solvedProblemIds.size
     dueCount = dueProblemIds.size
+
+    const streak = getCurrentStreak(submissions.map((submission) => submission.submittedAt))
+    studyStreak = streak.currentStreak
+    lastActiveDate = streak.lastActiveDate
   }
 
   const activeProblems = userId
@@ -242,6 +287,32 @@ export default async function ProblemsPage() {
               </p>
               <p className="mt-3 text-3xl font-bold text-white">{dueCount}</p>
               <p className="mt-2 text-sm text-zinc-400">Items that are ready for review today.</p>
+            </div>
+          </section>
+        )}
+
+        {userId && (
+          <section className="grid gap-4 md:grid-cols-2">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+                Study streak
+              </p>
+              <p className="mt-3 text-3xl font-bold text-white">{studyStreak} days</p>
+              <p className="mt-2 text-sm text-zinc-400">
+                Counted from consecutive submission days in your learning history.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+                Last active
+              </p>
+              <p className="mt-3 text-3xl font-bold text-white">
+                {lastActiveDate ?? "No activity yet"}
+              </p>
+              <p className="mt-2 text-sm text-zinc-400">
+                This uses the latest recorded submission date in your profile.
+              </p>
             </div>
           </section>
         )}

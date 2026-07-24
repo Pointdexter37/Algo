@@ -59,6 +59,7 @@ model User {
   sessions      Session[]
   submissions   Submission[]
   progress      UserProgress[]
+  preferences   UserPreference?
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -111,4 +112,19 @@ model UserProgress {
   problem          Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
 
   @@unique([userId, problemId])
+}
+
+model UserPreference {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  targetRoadmap       String?  // Example: "NeetCode 150" or "Blind 75"
+  dailyGoal           Int      @default(3)
+  preferredDifficulty String?  // Example: "Easy", "Medium", or "Hard"
+  targetInterviewDate DateTime?
+
+  // Relationship
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
