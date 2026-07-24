@@ -1,0 +1,111 @@
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
+import { saveUserPreferences } from "@/app/actions/preferences"
+import { redirect } from "next/navigation"
+
+export default async function OnboardingPage() {
+  const session = await getServerSession(authOptions)
+
+  if (!session?.user?.id) {
+    redirect("/api/auth/signin?callbackUrl=/onboarding")
+  }
+
+  const preferences = await prisma.userPreference.findUnique({
+    where: { userId: session.user.id },
+  })
+
+  return (
+    <main className="min-h-screen bg-[#0a0a0a] px-6 py-12 text-zinc-100">
+      <div className="mx-auto max-w-3xl space-y-8">
+        <section className="space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-300">
+            Onboarding
+          </p>
+          <h1 className="text-4xl font-extrabold tracking-tight text-white">
+            Set your study direction
+          </h1>
+          <p className="max-w-2xl text-sm leading-6 text-zinc-400">
+            These settings will help AlgoPilot shape recommendations around your goal, pace,
+            and current interview target.
+          </p>
+        </section>
+
+        <form
+          action={saveUserPreferences}
+          className="space-y-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6"
+        >
+          <div className="grid gap-2">
+            <label htmlFor="targetRoadmap" className="text-sm font-medium text-zinc-200">
+              Target roadmap
+            </label>
+            <input
+              id="targetRoadmap"
+              name="targetRoadmap"
+              defaultValue={preferences?.targetRoadmap ?? "NeetCode 150"}
+              placeholder="NeetCode 150"
+              className="rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-indigo-400"
+            />
+          </div>
+
+          <div className="grid gap-2 md:grid-cols-2">
+            <div className="grid gap-2">
+              <label htmlFor="dailyGoal" className="text-sm font-medium text-zinc-200">
+                Daily goal
+              </label>
+              <input
+                id="dailyGoal"
+                name="dailyGoal"
+                type="number"
+                min={1}
+                max={20}
+                defaultValue={preferences?.dailyGoal ?? 3}
+                className="rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none focus:border-indigo-400"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <label htmlFor="preferredDifficulty" className="text-sm font-medium text-zinc-200">
+                Preferred difficulty
+              </label>
+              <select
+                id="preferredDifficulty"
+                name="preferredDifficulty"
+                defaultValue={preferences?.preferredDifficulty ?? "Medium"}
+                className="rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none focus:border-indigo-400"
+              >
+                <option value="Easy">Easy</option>
+                <option value="Medium">Medium</option>
+                <option value="Hard">Hard</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <label htmlFor="targetInterviewDate" className="text-sm font-medium text-zinc-200">
+              Target interview date
+            </label>
+            <input
+              id="targetInterviewDate"
+              name="targetInterviewDate"
+              type="date"
+              defaultValue={
+                preferences?.targetInterviewDate
+                  ? preferences.targetInterviewDate.toISOString().slice(0, 10)
+                  : ""
+              }
+              className="rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none focus:border-indigo-400"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="inline-flex items-center rounded-lg bg-indigo-500 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-indigo-400"
+          >
+            Save preferences
+          </button>
+        </form>
+      </div>
+    </main>
+  )
+}
