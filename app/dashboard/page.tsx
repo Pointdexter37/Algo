@@ -54,8 +54,20 @@ export default async function DashboardPage() {
     }),
     prisma.submission.findMany({
       where: { userId },
-      select: { submittedAt: true },
+      select: {
+        submittedAt: true,
+        status: true,
+        timeSpent: true,
+        problem: {
+          select: {
+            leetcodeId: true,
+            title: true,
+            difficulty: true,
+          },
+        },
+      },
       orderBy: { submittedAt: "desc" },
+      take: 5,
     }),
   ])
 
@@ -150,6 +162,39 @@ export default async function DashboardPage() {
             <p className="mt-2 text-sm text-zinc-400">
               Use this to pace your roadmap and review frequency.
             </p>
+          </div>
+        </section>
+
+        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+            Recent activity
+          </p>
+          <div className="mt-4 space-y-3">
+            {submissions.length > 0 ? (
+              submissions.map((submission) => (
+                <div
+                  key={`${submission.problem.leetcodeId}-${submission.submittedAt.toISOString()}`}
+                  className="flex flex-col gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 md:flex-row md:items-center md:justify-between"
+                >
+                  <div>
+                    <p className="font-medium text-white">
+                      {submission.problem.leetcodeId}. {submission.problem.title}
+                    </p>
+                    <p className="text-sm text-zinc-400">
+                      {submission.problem.difficulty} · {submission.status}
+                      {submission.timeSpent ? ` · ${submission.timeSpent} min` : ""}
+                    </p>
+                  </div>
+                  <p className="text-sm text-zinc-500">
+                    {submission.submittedAt.toISOString().slice(0, 10)}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-zinc-400">
+                No submission history yet. Solve your first problem to start building this log.
+              </p>
+            )}
           </div>
         </section>
 
