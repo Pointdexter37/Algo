@@ -102,9 +102,22 @@ function getTopicWeaknessScores(
   return scores
 }
 
-export default async function ProblemsPage() {
+export default async function ProblemsPage({
+  searchParams,
+}: {
+  searchParams?: { q?: string | string[]; difficulty?: string | string[] }
+}) {
   const session = await getServerSession(authOptions)
   const userId = session?.user?.id
+  // Read simple query params so the library can be searched without client state.
+  const rawQuery = typeof searchParams?.q === "string" ? searchParams.q : ""
+  const rawDifficulty =
+    typeof searchParams?.difficulty === "string" ? searchParams.difficulty : ""
+  const normalizedQuery = rawQuery.trim().toLowerCase()
+  const selectedDifficulty =
+    rawDifficulty === "Easy" || rawDifficulty === "Medium" || rawDifficulty === "Hard"
+      ? rawDifficulty
+      : ""
 
   // Fetch problems from the database
   const problems = await prisma.problem.findMany({
@@ -112,6 +125,19 @@ export default async function ProblemsPage() {
       leetcodeId: 'asc'
     },
     take: 100 // Limit for now to prevent massive payloads
+  })
+
+  const filteredProblems = problems.filter((problem) => {
+    const matchesQuery =
+      normalizedQuery.length === 0 ||
+      problem.title.toLowerCase().includes(normalizedQuery) ||
+      problem.topicTags.toLowerCase().includes(normalizedQuery) ||
+      problem.leetcodeId.toString().includes(normalizedQuery)
+
+    const matchesDifficulty =
+      selectedDifficulty.length === 0 || problem.difficulty === selectedDifficulty
+
+    return matchesQuery && matchesDifficulty
   })
 
   // Fetch solved problem IDs for the current user
@@ -222,6 +248,59 @@ export default async function ProblemsPage() {
             Master these coding challenges to ace your next technical interview. Handpicked problems with personalized spaced repetition.
           </p>
         </header>
+
+        <form
+          className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 md:flex-row md:items-end"
+          method="get"
+        >
+          <div className="flex-1 space-y-2">
+            <label htmlFor="q" className="text-sm font-medium text-zinc-200">
+              Search problems
+            </label>
+            <input
+              id="q"
+              name="q"
+              defaultValue={rawQuery}
+              placeholder="Title, topic, or LeetCode number"
+              className="w-full rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-indigo-400"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="difficulty" className="text-sm font-medium text-zinc-200">
+              Difficulty
+            </label>
+            <select
+              id="difficulty"
+              name="difficulty"
+              defaultValue={selectedDifficulty}
+              className="w-full rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none focus:border-indigo-400"
+            >
+              <option value="">All</option>
+              <option value="Easy">Easy</option>
+              <option value="Medium">Medium</option>
+              <option value="Hard">Hard</option>
+            </select>
+          </div>
+
+          <button
+            type="submit"
+            className="rounded-lg bg-indigo-500 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-indigo-400"
+          >
+            Filter
+          </button>
+
+          <Link
+            href="/problems"
+            className="rounded-lg border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/10"
+          >
+            Clear
+          </Link>
+        </form>
+
+        <p className="text-sm text-zinc-400">
+          Showing {filteredProblems.length} of {problems.length} problems.
+        </p>
 
         {userId && (
           <section className="grid gap-4 md:grid-cols-[1.6fr_1fr_1fr]">
@@ -360,7 +439,7 @@ export default async function ProblemsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
-                {problems.map((problem) => (
+                {filteredProblems.map((problem) => (
                   <tr 
                     key={problem.id} 
                     className="group hover:bg-white/[0.02] transition-colors duration-200"
@@ -416,10 +495,10 @@ export default async function ProblemsPage() {
                   </tr>
                 ))}
                 
-                {problems.length === 0 && (
+                {filteredProblems.length === 0 && (
                   <tr>
                     <td colSpan={4} className="px-6 py-12 text-center text-zinc-500">
-                      No problems found. Run the scraping script to populate the database!
+                      No problems matched your search. Try clearing the filters.
                     </td>
                   </tr>
                 )}
