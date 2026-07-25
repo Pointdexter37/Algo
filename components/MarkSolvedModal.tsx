@@ -12,6 +12,7 @@ interface MarkSolvedModalProps {
 export default function MarkSolvedModal({ problemId, isSolved = false, isDue = false }: MarkSolvedModalProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const [timeSpent, setTimeSpent] = useState("15")
   const modalRef = useRef<HTMLDivElement>(null)
 
   // Close when clicking outside
@@ -28,15 +29,18 @@ export default function MarkSolvedModal({ problemId, isSolved = false, isDue = f
   }, [isOpen])
 
   const handleRating = (rating: number) => {
-    const timeSpent = 15 // Still a default for now, can be updated later
+    const parsedTimeSpent = Number(timeSpent)
+    const safeTimeSpent = Number.isFinite(parsedTimeSpent) && parsedTimeSpent > 0 ? parsedTimeSpent : 15
 
     startTransition(async () => {
       try {
-        await markProblemAsSolved(problemId, timeSpent, rating)
+        await markProblemAsSolved(problemId, safeTimeSpent, rating)
         setIsOpen(false)
+        setTimeSpent("15")
         alert(isDue ? "Review recorded!" : "Awesome! Problem marked as solved.")
-      } catch (error: any) {
-        alert(error.message || "Failed to save.")
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Failed to save."
+        alert(message)
       }
     })
   }
@@ -69,6 +73,20 @@ export default function MarkSolvedModal({ problemId, isSolved = false, isDue = f
         <div className="absolute left-0 lg:left-auto lg:right-0 top-full mt-2 w-64 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2">
           <h3 className="text-sm font-semibold text-zinc-200 mb-2">How hard was this?</h3>
           <p className="text-xs text-zinc-400 mb-3">Rate the difficulty to help us schedule your next review.</p>
+
+          <div className="mb-3 grid gap-2">
+            <label htmlFor={`timeSpent-${problemId}`} className="text-xs font-medium text-zinc-300">
+              Time spent (minutes)
+            </label>
+            <input
+              id={`timeSpent-${problemId}`}
+              type="number"
+              min={1}
+              value={timeSpent}
+              onChange={(event) => setTimeSpent(event.target.value)}
+              className="w-full rounded-lg border border-white/10 bg-[#111111] px-3 py-2 text-sm text-white outline-none focus:border-indigo-400"
+            />
+          </div>
 
           <div className="grid grid-cols-2 gap-2">
             <button
