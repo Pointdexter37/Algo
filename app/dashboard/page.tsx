@@ -37,6 +37,20 @@ function getCurrentStreak(submittedAtList: Date[]) {
   }
 }
 
+function getTopTopics(items: { topicTags: string }[], limit = 4) {
+  const counts = new Map<string, number>()
+
+  for (const item of items) {
+    for (const tag of item.topicTags.split(", ").filter(Boolean)) {
+      counts.set(tag, (counts.get(tag) ?? 0) + 1)
+    }
+  }
+
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, limit)
+}
+
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
 
@@ -50,7 +64,16 @@ export default async function DashboardPage() {
     prisma.userPreference.findUnique({ where: { userId } }),
     prisma.userProgress.findMany({
       where: { userId },
-      select: { nextReviewDate: true },
+      select: {
+        nextReviewDate: true,
+        problem: {
+          select: {
+            difficulty: true,
+            topicTags: true,
+            title: true,
+          },
+        },
+      },
     }),
     prisma.submission.findMany({
       where: { userId },
@@ -72,9 +95,19 @@ export default async function DashboardPage() {
   ])
 
   const now = new Date()
-  const dueCount = progress.filter((item) => item.nextReviewDate <= now).length
+  const dueProgress = progress.filter((item) => item.nextReviewDate <= now)
+  const dueCount = dueProgress.length
   const solvedCount = progress.length
   const streak = getCurrentStreak(submissions.map((item) => item.submittedAt))
+  const difficultyCounts = progress.reduce(
+    (acc, item) => {
+      const difficulty = item.problem.difficulty
+      acc[difficulty] = (acc[difficulty] ?? 0) + 1
+      return acc
+    },
+    { Easy: 0, Medium: 0, Hard: 0 } as Record<string, number>,
+  )
+  const topWeakTopics = getTopTopics(dueProgress.map((item) => item.problem))
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] px-6 py-12 text-zinc-100">
@@ -195,6 +228,70 @@ export default async function DashboardPage() {
                 No submission history yet. Solve your first problem to start building this log.
               </p>
             )}
+          </div>
+        </section>
+
+        <section className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+              Progress by difficulty
+            </p>
+            <div className="mt-4 space-y-3">
+              {(["Easy", "Medium", "Hard"] as const).map((difficulty) => {
+                const count = difficultyCounts[difficulty]
+                const total = solvedCount || 1
+                const percent = Math.round((count / total) * 100)
+
+                return (
+                  <div key={difficulty} className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-zinc-200">{difficulty}</span>
+                      <span className="text-zinc-400">{count}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-white/5">
+                      <div
+                        className={`h-2 rounded-full ${
+                          difficulty === "Easy"
+                            ? "bg-emerald-400"
+                            : difficulty === "Medium"
+                              ? "bg-amber-400"
+                              : "bg-rose-400"
+                        }`}
+                        style={{ width: `${percent}%` }}
+                      />
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+              Weak-topic signals
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              {topWeakTopics.length > 0 ? (
+                topWeakTopics.map(([topic, count]) => (
+                  <span
+                    key={topic}
+                    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-zinc-200"
+                  >
+                    {topic}
+                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-zinc-400">
+                      {count}
+                    </span>
+                  </span>
+                ))
+              ) : (
+                <p className="text-sm text-zinc-400">
+                  Solve and review more problems to reveal your weakest topics.
+                </p>
+              )}
+            </div>
+            <p className="mt-3 text-sm text-zinc-400">
+              These topics appear most often in items that are due for review today.
+            </p>
           </div>
         </section>
 
