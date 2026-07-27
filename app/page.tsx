@@ -48,6 +48,12 @@ export default function Home() {
               Open dashboard
             </Link>
             <Link
+              href="/roadmap"
+              className="inline-flex items-center rounded-lg border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/10"
+            >
+              View roadmap
+            </Link>
+            <Link
               href="/onboarding"
               className="inline-flex items-center rounded-lg border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/10"
             >
