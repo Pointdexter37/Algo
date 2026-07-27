@@ -60,6 +60,12 @@ export default function Home() {
               Set study goals
             </Link>
             <Link
+              href="/signup"
+              className="inline-flex items-center rounded-lg border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/10"
+            >
+              Sign up
+            </Link>
+            <Link
               href="/api/auth/signin?callbackUrl=/problems"
               className="inline-flex items-center rounded-lg border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/10"
             >

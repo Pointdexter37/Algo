@@ -1,8 +1,10 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client"
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient()
 
-const LEETCODE_API_ENDPOINT = 'https://leetcode.com/graphql';
+const LEETCODE_API_ENDPOINT = "https://leetcode.com/graphql"
+const DEFAULT_BATCH_SIZE = 50
+const DEFAULT_TARGET_COUNT = 150
 
 // GraphQL query to fetch the list of problems
 const PROBLEMSET_QUERY = `
@@ -26,13 +28,22 @@ const PROBLEMSET_QUERY = `
       }
     }
   }
-`;
+`
 
-async function fetchLeetCodeProblems(limit: number = 100, skip: number = 0) {
+type LeetCodeQuestion = {
+  frontendQuestionId: string
+  title: string
+  titleSlug: string
+  difficulty: "Easy" | "Medium" | "Hard" | string
+  topicTags: Array<{ name: string }>
+  isPaidOnly: boolean
+}
+
+async function fetchLeetCodeProblems(limit = DEFAULT_BATCH_SIZE, skip = 0) {
   const response = await fetch(LEETCODE_API_ENDPOINT, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify({
       query: PROBLEMSET_QUERY,
@@ -40,38 +51,76 @@ async function fetchLeetCodeProblems(limit: number = 100, skip: number = 0) {
         categorySlug: "",
         skip,
         limit,
-        filters: {}
+        filters: {},
       }
-    })
-  });
+    }),
+  })
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch from LeetCode API: ${response.statusText}`);
+    throw new Error(`Failed to fetch from LeetCode API: ${response.statusText}`)
   }
 
-  const data = await response.json();
-  return data.data.problemsetQuestionList.questions;
+  const data = (await response.json()) as {
+    data?: { problemsetQuestionList?: { questions?: LeetCodeQuestion[] } }
+    errors?: Array<{ message: string }>
+  }
+
+  if (data.errors?.length) {
+    throw new Error(data.errors[0]?.message ?? "Unknown LeetCode API error")
+  }
+
+  return data.data?.problemsetQuestionList?.questions ?? []
+}
+
+function normalizeTopicTags(topicTags: Array<{ name: string }> | undefined) {
+  return (topicTags ?? [])
+    .map((tag) => tag.name.trim())
+    .filter(Boolean)
+    .join(", ")
 }
 
 async function seedProblems() {
-  console.log('Fetching problems from LeetCode...');
-  
+  console.log("Fetching problems from LeetCode...")
+
   try {
-    // For now, let's just fetch the first 150 problems to avoid overwhelming the database
-    // This can be changed to fetch more in batches later.
-    const questions = await fetchLeetCodeProblems(150, 0);
+    const questions: LeetCodeQuestion[] = []
+    const seenIds = new Set<string>()
 
-    console.log(`Successfully fetched ${questions.length} problems. Saving to database...`);
+    for (let skip = 0; questions.length < DEFAULT_TARGET_COUNT; skip += DEFAULT_BATCH_SIZE) {
+      const batch = await fetchLeetCodeProblems(DEFAULT_BATCH_SIZE, skip)
+      if (batch.length === 0) {
+        break
+      }
 
-    let addedCount = 0;
+      for (const question of batch) {
+        if (seenIds.has(question.frontendQuestionId)) {
+          continue
+        }
+
+        seenIds.add(question.frontendQuestionId)
+        questions.push(question)
+
+        if (questions.length >= DEFAULT_TARGET_COUNT) {
+          break
+        }
+      }
+    }
+
+    console.log(`Successfully fetched ${questions.length} problems. Saving to database...`)
+
+    let processedCount = 0
 
     for (const q of questions) {
-      // Convert array of tags to a comma-separated string for our database
-      const topicTagsStr = q.topicTags.map((t: any) => t.name).join(', ');
+      const leetcodeId = Number.parseInt(q.frontendQuestionId, 10)
+      if (Number.isNaN(leetcodeId)) {
+        continue
+      }
+
+      const topicTagsStr = normalizeTopicTags(q.topicTags)
 
       // Use upsert so we don't crash if the problem already exists
       await prisma.problem.upsert({
-        where: { leetcodeId: parseInt(q.frontendQuestionId) },
+        where: { leetcodeId },
         update: {
           title: q.title,
           difficulty: q.difficulty,
@@ -80,23 +129,23 @@ async function seedProblems() {
           isPremium: q.isPaidOnly,
         },
         create: {
-          leetcodeId: parseInt(q.frontendQuestionId),
+          leetcodeId,
           title: q.title,
           difficulty: q.difficulty,
           topicTags: topicTagsStr,
           url: `https://leetcode.com/problems/${q.titleSlug}/`,
           isPremium: q.isPaidOnly,
-        }
-      });
-      addedCount++;
+        },
+      })
+      processedCount += 1
     }
 
-    console.log(`✅ Seeding complete! Processed ${addedCount} problems.`);
+    console.log(`✅ Seeding complete! Processed ${processedCount} problems.`)
   } catch (error) {
-    console.error('Error seeding problems:', error);
+    console.error("Error seeding problems:", error)
   } finally {
-    await prisma.$disconnect();
+    await prisma.$disconnect()
   }
 }
 
-seedProblems();
+seedProblems()

@@ -110,7 +110,7 @@ export default async function DashboardPage() {
   const streak = getCurrentStreak(submissions.map((item) => item.submittedAt))
   const todayKey = getDateKey(now)
   const hasActivityToday = submissions.some((item) => getDateKey(item.submittedAt) === todayKey)
-  const reminderTime = preferences?.studyReminderTime ?? null
+  const reminderTime = preferences?.studyReminderTime ?? ""
   const currentTimeKey = getTimeKey(now)
   const shouldShowReminder =
     Boolean(preferences?.studyReminderEnabled && reminderTime) &&

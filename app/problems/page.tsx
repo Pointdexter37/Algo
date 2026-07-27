@@ -105,14 +105,14 @@ function getTopicWeaknessScores(
 export default async function ProblemsPage({
   searchParams,
 }: {
-  searchParams?: { q?: string | string[]; difficulty?: string | string[] }
+  searchParams?: Promise<{ q?: string | string[]; difficulty?: string | string[] }>
 }) {
   const session = await getServerSession(authOptions)
   const userId = session?.user?.id
+  const params = (await searchParams) ?? {}
   // Read simple query params so the library can be searched without client state.
-  const rawQuery = typeof searchParams?.q === "string" ? searchParams.q : ""
-  const rawDifficulty =
-    typeof searchParams?.difficulty === "string" ? searchParams.difficulty : ""
+  const rawQuery = typeof params.q === "string" ? params.q : ""
+  const rawDifficulty = typeof params.difficulty === "string" ? params.difficulty : ""
   const normalizedQuery = rawQuery.trim().toLowerCase()
   const selectedDifficulty =
     rawDifficulty === "Easy" || rawDifficulty === "Medium" || rawDifficulty === "Hard"
