@@ -51,6 +51,15 @@ function getTopTopics(items: { topicTags: string }[], limit = 4) {
     .slice(0, limit)
 }
 
+function getTimeKey(date: Date) {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date)
+}
+
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
 
@@ -99,6 +108,14 @@ export default async function DashboardPage() {
   const dueCount = dueProgress.length
   const solvedCount = progress.length
   const streak = getCurrentStreak(submissions.map((item) => item.submittedAt))
+  const todayKey = getDateKey(now)
+  const hasActivityToday = submissions.some((item) => getDateKey(item.submittedAt) === todayKey)
+  const reminderTime = preferences?.studyReminderTime ?? null
+  const currentTimeKey = getTimeKey(now)
+  const shouldShowReminder =
+    Boolean(preferences?.studyReminderEnabled && reminderTime) &&
+    !hasActivityToday &&
+    currentTimeKey >= reminderTime
   const difficultyCounts = progress.reduce(
     (acc, item) => {
       const difficulty = item.problem.difficulty
@@ -172,6 +189,18 @@ export default async function DashboardPage() {
           </div>
         </section>
 
+        {shouldShowReminder && (
+          <section className="rounded-2xl border border-amber-500/20 bg-amber-500/10 px-5 py-4 text-amber-100">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-200">
+              Study reminder
+            </p>
+            <p className="mt-2 text-sm leading-6 text-amber-50">
+              Your reminder is set for {reminderTime}. You have not logged activity today yet,
+              so this is a good time to open the problem library and clear your next review.
+            </p>
+          </section>
+        )}
+
         <section className="grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
@@ -196,6 +225,23 @@ export default async function DashboardPage() {
               Use this to pace your roadmap and review frequency.
             </p>
           </div>
+        </section>
+
+        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+            Reminder settings
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-zinc-200">
+              {preferences?.studyReminderEnabled ? "Reminders on" : "Reminders off"}
+            </span>
+            <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-zinc-200">
+              {preferences?.studyReminderTime ?? "No reminder time set"}
+            </span>
+          </div>
+          <p className="mt-3 text-sm text-zinc-400">
+            This is only stored for now. It becomes useful once scheduled notifications are added.
+          </p>
         </section>
 
         <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
@@ -301,6 +347,12 @@ export default async function DashboardPage() {
             className="inline-flex items-center rounded-lg bg-indigo-500 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-indigo-400"
           >
             Open problem library
+          </Link>
+          <Link
+            href="/reviews"
+            className="inline-flex items-center rounded-lg border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/10"
+          >
+            Open reviews
           </Link>
           <Link
             href="/onboarding"

@@ -81,6 +81,38 @@ export default async function OnboardingPage() {
             </div>
           </div>
 
+          <div className="grid gap-4 md:grid-cols-2">
+            <label className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3">
+              <input
+                type="checkbox"
+                name="studyReminderEnabled"
+                defaultChecked={preferences?.studyReminderEnabled ?? false}
+                className="mt-1 h-4 w-4 rounded border-white/20 bg-[#111111] text-indigo-500"
+              />
+              <span className="space-y-1">
+                <span className="block text-sm font-medium text-zinc-100">
+                  Enable daily study reminder
+                </span>
+                <span className="block text-xs leading-5 text-zinc-400">
+                  Store a reminder preference so the app can nudge you later.
+                </span>
+              </span>
+            </label>
+
+            <div className="grid gap-2">
+              <label htmlFor="studyReminderTime" className="text-sm font-medium text-zinc-200">
+                Reminder time
+              </label>
+              <input
+                id="studyReminderTime"
+                name="studyReminderTime"
+                type="time"
+                defaultValue={preferences?.studyReminderTime ?? "20:00"}
+                className="rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none focus:border-indigo-400"
+              />
+            </div>
+          </div>
+
           <div className="grid gap-2">
             <label htmlFor="targetInterviewDate" className="text-sm font-medium text-zinc-200">
               Target interview date

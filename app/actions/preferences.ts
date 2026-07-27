@@ -17,6 +17,8 @@ export async function saveUserPreferences(formData: FormData) {
   const targetRoadmap = formData.get("targetRoadmap")
   const dailyGoal = formData.get("dailyGoal")
   const preferredDifficulty = formData.get("preferredDifficulty")
+  const studyReminderEnabled = formData.get("studyReminderEnabled")
+  const studyReminderTime = formData.get("studyReminderTime")
   const targetInterviewDate = formData.get("targetInterviewDate")
 
   await prisma.userPreference.upsert({
@@ -27,6 +29,11 @@ export async function saveUserPreferences(formData: FormData) {
       preferredDifficulty:
         typeof preferredDifficulty === "string" && preferredDifficulty.trim()
           ? preferredDifficulty.trim()
+          : null,
+      studyReminderEnabled: studyReminderEnabled === "on",
+      studyReminderTime:
+        typeof studyReminderTime === "string" && studyReminderTime.trim()
+          ? studyReminderTime.trim()
           : null,
       targetInterviewDate:
         typeof targetInterviewDate === "string" && targetInterviewDate
@@ -41,6 +48,11 @@ export async function saveUserPreferences(formData: FormData) {
       preferredDifficulty:
         typeof preferredDifficulty === "string" && preferredDifficulty.trim()
           ? preferredDifficulty.trim()
+          : null,
+      studyReminderEnabled: studyReminderEnabled === "on",
+      studyReminderTime:
+        typeof studyReminderTime === "string" && studyReminderTime.trim()
+          ? studyReminderTime.trim()
           : null,
       targetInterviewDate:
         typeof targetInterviewDate === "string" && targetInterviewDate

@@ -120,6 +120,8 @@ model UserPreference {
   targetRoadmap       String?  // Example: "NeetCode 150" or "Blind 75"
   dailyGoal           Int      @default(3)
   preferredDifficulty String?  // Example: "Easy", "Medium", or "Hard"
+  studyReminderEnabled Boolean  @default(false)
+  studyReminderTime   String?  // Example: "20:00"
   targetInterviewDate DateTime?
 
   // Relationship
