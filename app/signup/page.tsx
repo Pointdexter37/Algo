@@ -2,6 +2,8 @@ import Link from "next/link"
 import { registerUser } from "@/app/actions/auth"
 
 export default function SignupPage() {
+  const googleEnabled = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET)
+
   return (
     <main className="min-h-screen bg-[#0a0a0a] px-6 py-12 text-zinc-100">
       <div className="mx-auto flex min-h-screen max-w-4xl items-center">
@@ -18,12 +20,18 @@ export default function SignupPage() {
               reviews, and study settings will stay in one place.
             </p>
 
-            <Link
-              href="/api/auth/signin?callbackUrl=/dashboard"
-              className="inline-flex items-center rounded-lg bg-white px-5 py-3 text-sm font-medium text-zinc-950 transition-colors hover:bg-zinc-200"
-            >
-              Continue with Google
-            </Link>
+            {googleEnabled ? (
+              <Link
+                href="/api/auth/signin?callbackUrl=/dashboard"
+                className="inline-flex items-center rounded-lg bg-white px-5 py-3 text-sm font-medium text-zinc-950 transition-colors hover:bg-zinc-200"
+              >
+                Continue with Google
+              </Link>
+            ) : (
+              <p className="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-zinc-400">
+                Google sign-in will appear here once the OAuth credentials are configured.
+              </p>
+            )}
           </section>
 
           <form action={registerUser} className="space-y-4 rounded-2xl border border-white/10 bg-[#111111] p-5">

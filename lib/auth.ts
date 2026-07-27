@@ -11,10 +11,14 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-    }),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
     CredentialsProvider({
       name: "Email and Password",
       credentials: {
@@ -47,7 +51,7 @@ export const authOptions: NextAuthOptions = {
           image: user.image,
         }
       }
-    })
+    }),
   ],
   callbacks: {
     async session({ session, token }) {
