@@ -35,17 +35,20 @@ export default async function OnboardingPage() {
           action={saveUserPreferences}
           className="space-y-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6"
         >
-          <div className="grid gap-2">
-            <label htmlFor="targetRoadmap" className="text-sm font-medium text-zinc-200">
-              Target roadmap
-            </label>
-            <input
+            <div className="grid gap-2">
+              <label htmlFor="targetRoadmap" className="text-sm font-medium text-zinc-200">
+              Study track
+              </label>
+            <select
               id="targetRoadmap"
               name="targetRoadmap"
               defaultValue={preferences?.targetRoadmap ?? "NeetCode 150"}
-              placeholder="NeetCode 150"
               className="rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-indigo-400"
-            />
+            >
+              <option value="NeetCode 150">NeetCode 150</option>
+              <option value="Striver A to Z">Striver A to Z</option>
+              <option value="SDE Sheet">SDE Sheet</option>
+            </select>
           </div>
 
           <div className="grid gap-2 md:grid-cols-2">
