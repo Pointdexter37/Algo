@@ -57,7 +57,7 @@ export default function MarkSolvedModal({ problemId, isSolved = false, isDue = f
   }
 
   return (
-    <div className="relative inline-block" ref={modalRef}>
+    <div className="relative inline-block">
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={isPending}
@@ -70,49 +70,75 @@ export default function MarkSolvedModal({ problemId, isSolved = false, isDue = f
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 lg:left-auto lg:right-0 top-full mt-2 w-64 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2">
-          <h3 className="text-sm font-semibold text-zinc-200 mb-2">How hard was this?</h3>
-          <p className="text-xs text-zinc-400 mb-3">Rate the difficulty to help us schedule your next review.</p>
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setIsOpen(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#1a1a1a] p-5 shadow-2xl animate-in fade-in zoom-in-95"
+            onClick={(event) => event.stopPropagation()}
+            ref={modalRef}
+          >
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-200">How hard was this?</h3>
+                <p className="mt-1 text-xs text-zinc-400">
+                  Rate the difficulty to help us schedule your next review.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-zinc-300 hover:bg-white/10"
+              >
+                Close
+              </button>
+            </div>
 
-          <div className="mb-3 grid gap-2">
-            <label htmlFor={`timeSpent-${problemId}`} className="text-xs font-medium text-zinc-300">
-              Time spent (minutes)
-            </label>
-            <input
-              id={`timeSpent-${problemId}`}
-              type="number"
-              min={1}
-              value={timeSpent}
-              onChange={(event) => setTimeSpent(event.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-[#111111] px-3 py-2 text-sm text-white outline-none focus:border-indigo-400"
-            />
-          </div>
+            <div className="mb-4 grid gap-2">
+              <label htmlFor={`timeSpent-${problemId}`} className="text-xs font-medium text-zinc-300">
+                Time spent (minutes)
+              </label>
+              <input
+                id={`timeSpent-${problemId}`}
+                type="number"
+                min={1}
+                value={timeSpent}
+                onChange={(event) => setTimeSpent(event.target.value)}
+                className="w-full rounded-lg border border-white/10 bg-[#111111] px-3 py-2 text-sm text-white outline-none focus:border-indigo-400"
+              />
+            </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => handleRating(0)}
-              className="px-2 py-1.5 text-xs font-medium rounded bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-colors"
-            >
-              Again (0)
-            </button>
-            <button
-              onClick={() => handleRating(2)}
-              className="px-2 py-1.5 text-xs font-medium rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
-            >
-              Hard (2)
-            </button>
-            <button
-              onClick={() => handleRating(4)}
-              className="px-2 py-1.5 text-xs font-medium rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
-            >
-              Good (4)
-            </button>
-            <button
-              onClick={() => handleRating(5)}
-              className="px-2 py-1.5 text-xs font-medium rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors"
-            >
-              Easy (5)
-            </button>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => handleRating(0)}
+                className="rounded bg-rose-500/10 px-2 py-2 text-xs font-medium text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-colors"
+              >
+                Again (0)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRating(2)}
+                className="rounded bg-amber-500/10 px-2 py-2 text-xs font-medium text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
+              >
+                Hard (2)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRating(4)}
+                className="rounded bg-emerald-500/10 px-2 py-2 text-xs font-medium text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
+              >
+                Good (4)
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRating(5)}
+                className="rounded bg-cyan-500/10 px-2 py-2 text-xs font-medium text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors"
+              >
+                Easy (5)
+              </button>
+            </div>
           </div>
         </div>
       )}
