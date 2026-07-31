@@ -1,10 +1,11 @@
 import { PrismaClient } from "@prisma/client"
+import { CURATED_TRACKS, normalizeProblemTitle } from "@/lib/studyTracks"
 
 const prisma = new PrismaClient()
 
 const LEETCODE_API_ENDPOINT = "https://leetcode.com/graphql"
 const DEFAULT_BATCH_SIZE = 50
-const DEFAULT_TARGET_COUNT = 150
+const DEFAULT_TARGET_COUNT = 250
 
 // GraphQL query to fetch the list of problems
 const PROBLEMSET_QUERY = `
@@ -138,6 +139,59 @@ async function seedProblems() {
         },
       })
       processedCount += 1
+    }
+
+    const seededProblems = await prisma.problem.findMany({
+      select: {
+        id: true,
+        title: true,
+      },
+    })
+
+    const problemIdByTitle = new Map(
+      seededProblems.map((problem) => [normalizeProblemTitle(problem.title), problem.id]),
+    )
+
+    for (const track of CURATED_TRACKS) {
+      const trackRecord = await prisma.studyTrack.upsert({
+        where: { slug: track.slug },
+        update: {
+          title: track.title,
+          description: track.description,
+          sortOrder: track.sortOrder,
+          isActive: true,
+        },
+        create: {
+          slug: track.slug,
+          title: track.title,
+          description: track.description,
+          sortOrder: track.sortOrder,
+          isActive: true,
+        },
+      })
+
+      await prisma.studyTrackProblem.deleteMany({
+        where: { trackId: trackRecord.id },
+      })
+
+      const trackProblemIds = Array.from(
+        new Set(
+          track.problemTitles
+            .map((title) => problemIdByTitle.get(normalizeProblemTitle(title)))
+            .filter((problemId): problemId is string => Boolean(problemId)),
+        ),
+      )
+
+      if (trackProblemIds.length > 0) {
+        await prisma.studyTrackProblem.createMany({
+          data: trackProblemIds.map((problemId, position) => ({
+            trackId: trackRecord.id,
+            problemId,
+            position: position + 1,
+          })),
+          skipDuplicates: true,
+        })
+      }
     }
 
     console.log(`✅ Seeding complete! Processed ${processedCount} problems.`)

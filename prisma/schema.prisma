@@ -77,9 +77,38 @@ model Problem {
   // Relationships
   submissions Submission[]
   progress    UserProgress[]
+  studyTrackMemberships StudyTrackProblem[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model StudyTrack {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+
+  problems    StudyTrackProblem[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model StudyTrackProblem {
+  id        String    @id @default(cuid())
+  trackId   String
+  problemId String
+  position  Int?
+
+  track     StudyTrack @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  problem   Problem    @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([trackId, problemId])
+  @@index([trackId])
+  @@index([problemId])
 }
 
 model Submission {
