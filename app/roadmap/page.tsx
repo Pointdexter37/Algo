@@ -37,10 +37,10 @@ export default async function RoadmapPage() {
   })
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] px-6 py-12 text-zinc-100">
+    <main className="app-shell px-6 py-12 text-zinc-100">
       <div className="mx-auto max-w-5xl space-y-8">
         <section className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-300">
+          <p className="eyebrow">
             Study tracks
           </p>
           <h1 className="text-4xl font-extrabold tracking-tight text-white">
@@ -60,8 +60,8 @@ export default async function RoadmapPage() {
               key={item.title}
               className={`flex flex-col gap-3 rounded-2xl border p-5 ${
                 selected
-                  ? "border-indigo-500/30 bg-indigo-500/10"
-                  : "border-white/10 bg-white/[0.03]"
+                  ? "border-[#d7ff4f]/35 bg-[#d7ff4f]/[0.08] shadow-[0_18px_50px_rgba(215,255,79,0.06)]"
+                  : "app-surface"
               }`}
             >
               <div className="space-y-1">
@@ -89,7 +89,7 @@ export default async function RoadmapPage() {
         <div className="flex flex-wrap gap-3">
           <Link
             href="/dashboard"
-            className="inline-flex items-center rounded-lg bg-indigo-500 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-indigo-400"
+            className="accent-button inline-flex items-center rounded-lg px-5 py-3 text-sm font-bold transition-colors"
           >
             Open dashboard
           </Link>
