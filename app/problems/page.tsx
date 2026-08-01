@@ -3,6 +3,7 @@ import Link from "next/link"
 import MarkSolvedModal from "@/components/MarkSolvedModal"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
+import { CURATED_TRACKS } from "@/lib/studyTracks"
 
 function getDifficultyRank(difficulty: string) {
   if (difficulty === "Easy") return 0
@@ -105,7 +106,7 @@ function getTopicWeaknessScores(
 export default async function ProblemsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ q?: string | string[]; difficulty?: string | string[] }>
+  searchParams?: Promise<{ q?: string | string[]; difficulty?: string | string[]; track?: string | string[] }>
 }) {
   const session = await getServerSession(authOptions)
   const userId = session?.user?.id
@@ -113,21 +114,46 @@ export default async function ProblemsPage({
   // Read simple query params so the library can be searched without client state.
   const rawQuery = typeof params.q === "string" ? params.q : ""
   const rawDifficulty = typeof params.difficulty === "string" ? params.difficulty : ""
+  const rawTrack = typeof params.track === "string" ? params.track : ""
   const normalizedQuery = rawQuery.trim().toLowerCase()
   const selectedDifficulty =
     rawDifficulty === "Easy" || rawDifficulty === "Medium" || rawDifficulty === "Hard"
       ? rawDifficulty
       : ""
+  const selectedTrack =
+    CURATED_TRACKS.find((track) => track.slug === rawTrack)?.slug ?? ""
 
   // Fetch problems from the database
   const problems = await prisma.problem.findMany({
     orderBy: {
       leetcodeId: 'asc'
     },
-    take: 100 // Limit for now to prevent massive payloads
+    take: 250
   })
 
-  const filteredProblems = problems.filter((problem) => {
+  const trackProblemIds = new Set<string>()
+  if (selectedTrack) {
+    const track = await prisma.studyTrack.findUnique({
+      where: { slug: selectedTrack },
+      select: {
+        problems: {
+          select: {
+            problemId: true,
+          },
+        },
+      },
+    })
+
+    track?.problems.forEach((membership) => {
+      trackProblemIds.add(membership.problemId)
+    })
+  }
+
+  const visibleProblems = selectedTrack
+    ? problems.filter((problem) => trackProblemIds.has(problem.id))
+    : problems
+
+  const filteredProblems = visibleProblems.filter((problem) => {
     const matchesQuery =
       normalizedQuery.length === 0 ||
       problem.title.toLowerCase().includes(normalizedQuery) ||
@@ -174,15 +200,15 @@ export default async function ProblemsPage({
   }
 
   const activeProblems = userId
-    ? problems.filter((problem) => dueProblemIds.has(problem.id) || !solvedProblemIds.has(problem.id))
-    : problems
+    ? visibleProblems.filter((problem) => dueProblemIds.has(problem.id) || !solvedProblemIds.has(problem.id))
+    : visibleProblems
   const topicWeakness = userId
     ? getTopicWeaknessScores(activeProblems, dueProblemIds, solvedProblemIds)
     : new Map<string, number>()
 
   const recommendation = (() => {
     if (userId) {
-      const dueProblems = problems
+      const dueProblems = visibleProblems
         .filter((problem) => dueProblemIds.has(problem.id))
         .sort((a, b) => {
           const scoreDiff = getProblemTopicScore(b, topicWeakness) - getProblemTopicScore(a, topicWeakness)
@@ -201,7 +227,7 @@ export default async function ProblemsPage({
         }
       }
 
-      const nextProblems = problems
+      const nextProblems = visibleProblems
         .filter((problem) => !solvedProblemIds.has(problem.id))
         .sort((a, b) => {
           const scoreDiff = getProblemTopicScore(b, topicWeakness) - getProblemTopicScore(a, topicWeakness)
@@ -226,14 +252,14 @@ export default async function ProblemsPage({
       }
     }
 
-    return {
-      problem: problems[0] ?? null,
-      title: "Sign in for recommendations",
-      description: "Create an account to get a personalized next-problem recommendation and due-review tracking.",
-    }
+      return {
+        problem: visibleProblems[0] ?? null,
+        title: "Sign in for recommendations",
+        description: "Create an account to get a personalized next-problem recommendation and due-review tracking.",
+      }
   })()
 
-  const topTopics = userId ? getTopScoredTopics(topicWeakness) : getTopTopics(problems)
+  const topTopics = userId ? getTopScoredTopics(topicWeakness) : getTopTopics(visibleProblems)
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-zinc-300 p-8 font-sans selection:bg-indigo-500/30">
@@ -283,6 +309,25 @@ export default async function ProblemsPage({
             </select>
           </div>
 
+          <div className="space-y-2">
+            <label htmlFor="track" className="text-sm font-medium text-zinc-200">
+              Track
+            </label>
+            <select
+              id="track"
+              name="track"
+              defaultValue={selectedTrack}
+              className="w-full rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none focus:border-indigo-400"
+            >
+              <option value="">All tracks</option>
+              {CURATED_TRACKS.map((track) => (
+                <option key={track.slug} value={track.slug}>
+                  {track.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <button
             type="submit"
             className="rounded-lg bg-indigo-500 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-indigo-400"
@@ -298,8 +343,35 @@ export default async function ProblemsPage({
           </Link>
         </form>
 
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/problems"
+            className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+              selectedTrack === ""
+                ? "border-indigo-400/40 bg-indigo-500/20 text-indigo-200"
+                : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
+            }`}
+          >
+            All tracks
+          </Link>
+          {CURATED_TRACKS.map((track) => (
+            <Link
+              key={track.slug}
+              href={`/problems?track=${track.slug}${rawQuery ? `&q=${encodeURIComponent(rawQuery)}` : ""}${selectedDifficulty ? `&difficulty=${selectedDifficulty}` : ""}`}
+              className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                selectedTrack === track.slug
+                  ? "border-indigo-400/40 bg-indigo-500/20 text-indigo-200"
+                  : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
+              }`}
+            >
+              {track.title}
+            </Link>
+          ))}
+        </div>
+
         <p className="text-sm text-zinc-400">
-          Showing {filteredProblems.length} of {problems.length} problems.
+          Showing {filteredProblems.length} of {visibleProblems.length} problems
+          {selectedTrack ? ` in ${CURATED_TRACKS.find((track) => track.slug === selectedTrack)?.title}` : ""}.
         </p>
 
         {userId && (
