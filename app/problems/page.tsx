@@ -262,13 +262,13 @@ export default async function ProblemsPage({
   const topTopics = userId ? getTopScoredTopics(topicWeakness) : getTopTopics(visibleProblems)
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-zinc-300 p-8 font-sans selection:bg-indigo-500/30">
+    <div className="app-shell p-6 font-sans text-zinc-300 sm:p-8">
       <div className="max-w-5xl mx-auto space-y-8">
         
         {/* Header Section */}
         <header className="space-y-4">
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-white">
-            Problem <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">Library</span>
+            Problem <span className="text-[#d7ff4f]">Library</span>
           </h1>
           <p className="text-lg text-zinc-400 max-w-2xl leading-relaxed">
             Master these coding challenges to ace your next technical interview. Handpicked problems with personalized spaced repetition.
@@ -276,7 +276,7 @@ export default async function ProblemsPage({
         </header>
 
         <form
-          className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 md:flex-row md:items-end"
+          className="app-surface flex flex-col gap-3 rounded-2xl p-4 md:flex-row md:items-end"
           method="get"
         >
           <div className="flex-1 space-y-2">
@@ -288,7 +288,7 @@ export default async function ProblemsPage({
               name="q"
               defaultValue={rawQuery}
               placeholder="Title, topic, or LeetCode number"
-              className="w-full rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-indigo-400"
+              className="w-full rounded-lg border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-[#d7ff4f]/60"
             />
           </div>
 
@@ -300,7 +300,7 @@ export default async function ProblemsPage({
               id="difficulty"
               name="difficulty"
               defaultValue={selectedDifficulty}
-              className="w-full rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none focus:border-indigo-400"
+              className="w-full rounded-lg border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none focus:border-[#d7ff4f]/60"
             >
               <option value="">All</option>
               <option value="Easy">Easy</option>
@@ -317,7 +317,7 @@ export default async function ProblemsPage({
               id="track"
               name="track"
               defaultValue={selectedTrack}
-              className="w-full rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none focus:border-indigo-400"
+              className="w-full rounded-lg border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none focus:border-[#d7ff4f]/60"
             >
               <option value="">All tracks</option>
               {CURATED_TRACKS.map((track) => (
@@ -330,7 +330,7 @@ export default async function ProblemsPage({
 
           <button
             type="submit"
-            className="rounded-lg bg-indigo-500 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-indigo-400"
+            className="accent-button rounded-lg px-5 py-3 text-sm font-bold transition-colors"
           >
             Filter
           </button>
@@ -348,7 +348,7 @@ export default async function ProblemsPage({
             href="/problems"
             className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
               selectedTrack === ""
-                ? "border-indigo-400/40 bg-indigo-500/20 text-indigo-200"
+                ? "border-[#d7ff4f]/35 bg-[#d7ff4f]/10 text-[#e4ff93]"
                 : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
             }`}
           >
@@ -360,7 +360,7 @@ export default async function ProblemsPage({
               href={`/problems?track=${track.slug}${rawQuery ? `&q=${encodeURIComponent(rawQuery)}` : ""}${selectedDifficulty ? `&difficulty=${selectedDifficulty}` : ""}`}
               className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
                 selectedTrack === track.slug
-                  ? "border-indigo-400/40 bg-indigo-500/20 text-indigo-200"
+                  ? "border-[#d7ff4f]/35 bg-[#d7ff4f]/10 text-[#e4ff93]"
                   : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
               }`}
             >
@@ -376,8 +376,8 @@ export default async function ProblemsPage({
 
         {userId && (
           <section className="grid gap-4 md:grid-cols-[1.6fr_1fr_1fr]">
-            <div className="rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-500/15 via-white/[0.03] to-cyan-500/10 p-5 shadow-xl shadow-indigo-500/5">
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-300">
+            <div className="app-surface rounded-2xl bg-[linear-gradient(135deg,rgba(215,255,79,0.13),rgba(255,255,255,0.025)_52%,rgba(255,255,255,0.01))] p-5">
+              <p className="eyebrow">
                 {recommendation.title}
               </p>
               <div className="mt-3 flex items-start justify-between gap-4">
@@ -424,7 +424,7 @@ export default async function ProblemsPage({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+            <div className="app-surface rounded-2xl p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
                 Solved
               </p>
@@ -432,7 +432,7 @@ export default async function ProblemsPage({
               <p className="mt-2 text-sm text-zinc-400">Problems tracked in your progress history.</p>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+            <div className="app-surface rounded-2xl p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
                 Due now
               </p>
@@ -444,7 +444,7 @@ export default async function ProblemsPage({
 
         {userId && (
           <section className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+            <div className="app-surface rounded-2xl p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
                 Study streak
               </p>
@@ -454,7 +454,7 @@ export default async function ProblemsPage({
               </p>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+            <div className="app-surface rounded-2xl p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
                 Last active
               </p>
@@ -469,7 +469,7 @@ export default async function ProblemsPage({
         )}
 
         {topTopics.length > 0 && (
-          <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <section className="app-surface rounded-2xl p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
               Topic focus
             </p>
@@ -493,7 +493,7 @@ export default async function ProblemsPage({
         )}
 
         {!userId && (
-          <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/10 px-5 py-4 text-sm text-indigo-200">
+          <div className="rounded-2xl border border-[#d7ff4f]/20 bg-[#d7ff4f]/[0.08] px-5 py-4 text-sm text-[#e4ff93]">
             Sign in to track solved problems and schedule reviews. You can still browse the library without an account.
           </div>
         )}
@@ -528,7 +528,7 @@ export default async function ProblemsPage({
                         href={problem.url}
                         target="_blank"
                         rel="noopener noreferrer" 
-                        className="font-medium text-zinc-200 hover:text-indigo-400 transition-colors text-base"
+                        className="text-base font-medium text-zinc-200 transition-colors hover:text-[#d7ff4f]"
                       >
                         {problem.leetcodeId}. {problem.title}
                       </Link>

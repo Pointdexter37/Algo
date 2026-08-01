@@ -1,8 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #060606;
+  --foreground: #f4f4f0;
+  --muted: #9a9a92;
+  --surface: rgba(16, 16, 15, 0.88);
+  --surface-strong: #121211;
+  --line: rgba(255, 255, 255, 0.1);
+  --accent: #d7ff4f;
+  --accent-ink: #111408;
 }
 
 @theme inline {
@@ -12,15 +18,124 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--background);
 }
 
 body {
-  background: var(--background);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background:
+    radial-gradient(ellipse 72% 38% at 50% -15%, rgba(215, 255, 79, 0.1), transparent 68%),
+    linear-gradient(115deg, transparent 0 48%, rgba(255, 255, 255, 0.018) 48.1% 48.3%, transparent 48.4%),
+    #060606;
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), sans-serif;
+}
+
+body::before {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+  opacity: 0.38;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.026) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.026) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, black, transparent 76%);
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.app-shell {
+  min-height: 100vh;
+  background: radial-gradient(circle at 88% 15%, rgba(215, 255, 79, 0.045), transparent 22%);
+}
+
+.app-surface {
+  border: 1px solid var(--line);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012));
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.26);
+}
+
+.app-surface:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.accent-button {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: 0 10px 30px rgba(215, 255, 79, 0.13);
+}
+
+.accent-button:hover {
+  background: #e2ff7b;
+  box-shadow: 0 14px 38px rgba(215, 255, 79, 0.2);
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scan {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(340%); }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(215, 255, 79, 0.32); }
+  50% { box-shadow: 0 0 0 8px rgba(215, 255, 79, 0); }
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -9px, 0); }
+}
+
+.animate-rise-in {
+  animation: rise-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-scan {
+  animation: scan 4.5s ease-in-out infinite;
+}
+
+.animate-pulse-dot {
+  animation: pulse-dot 2.8s ease-out infinite;
+}
+
+.animate-drift {
+  animation: drift 8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
 }

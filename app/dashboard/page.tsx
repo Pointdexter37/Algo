@@ -127,10 +127,10 @@ export default async function DashboardPage() {
   const topWeakTopics = getTopTopics(dueProgress.map((item) => item.problem))
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] px-6 py-12 text-zinc-100">
+    <main className="app-shell px-6 py-12 text-zinc-100">
       <div className="mx-auto max-w-6xl space-y-8">
         <section className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-300">
+          <p className="eyebrow">
             Dashboard
           </p>
           <h1 className="text-4xl font-extrabold tracking-tight text-white">
@@ -143,8 +143,8 @@ export default async function DashboardPage() {
         </section>
 
         <section className="grid gap-4 md:grid-cols-[1.6fr_1fr_1fr]">
-          <div className="rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-500/15 via-white/[0.03] to-cyan-500/10 p-5 shadow-xl shadow-indigo-500/5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-300">
+          <div className="app-surface rounded-2xl bg-[linear-gradient(135deg,rgba(215,255,79,0.13),rgba(255,255,255,0.025)_52%,rgba(255,255,255,0.01))] p-5">
+            <p className="eyebrow">
               Today’s focus
             </p>
             <h2 className="mt-3 text-2xl font-bold text-white">
@@ -168,7 +168,7 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <div className="app-surface rounded-2xl p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
               Solved
             </p>
@@ -178,7 +178,7 @@ export default async function DashboardPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <div className="app-surface rounded-2xl p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
               Due now
             </p>
@@ -202,7 +202,7 @@ export default async function DashboardPage() {
         )}
 
         <section className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <div className="app-surface rounded-2xl p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
               Study streak
             </p>
@@ -212,7 +212,7 @@ export default async function DashboardPage() {
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <div className="app-surface rounded-2xl p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
               Target date
             </p>
@@ -227,7 +227,7 @@ export default async function DashboardPage() {
           </div>
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+        <section className="app-surface rounded-2xl p-5">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
             Reminder settings
           </p>
@@ -244,7 +244,7 @@ export default async function DashboardPage() {
           </p>
         </section>
 
-        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+        <section className="app-surface rounded-2xl p-5">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
             Recent activity
           </p>
@@ -278,7 +278,7 @@ export default async function DashboardPage() {
         </section>
 
         <section className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <div className="app-surface rounded-2xl p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
               Progress by difficulty
             </p>
@@ -312,7 +312,7 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <div className="app-surface rounded-2xl p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
               Weak-topic signals
             </p>
@@ -344,7 +344,7 @@ export default async function DashboardPage() {
         <div className="flex flex-wrap gap-3">
           <Link
             href="/problems"
-            className="inline-flex items-center rounded-lg bg-indigo-500 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-indigo-400"
+            className="accent-button inline-flex items-center rounded-lg px-5 py-3 text-sm font-bold transition-colors"
           >
             Open problem library
           </Link>
