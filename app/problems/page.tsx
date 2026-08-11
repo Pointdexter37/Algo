@@ -11,6 +11,27 @@ function getDifficultyRank(difficulty: string) {
   return 2
 }
 
+function buildProblemsQuery(params: {
+  q?: string
+  difficulty?: string
+  track?: string
+  status?: string
+  sort?: string
+  topic?: string
+}) {
+  const searchParams = new URLSearchParams()
+
+  if (params.q) searchParams.set("q", params.q)
+  if (params.difficulty) searchParams.set("difficulty", params.difficulty)
+  if (params.track) searchParams.set("track", params.track)
+  if (params.status) searchParams.set("status", params.status)
+  if (params.sort) searchParams.set("sort", params.sort)
+  if (params.topic) searchParams.set("topic", params.topic)
+
+  const query = searchParams.toString()
+  return query ? `/problems?${query}` : "/problems"
+}
+
 function getTopTopics(items: { topicTags: string }[], limit = 3) {
   const counts = new Map<string, number>()
 
@@ -106,7 +127,14 @@ function getTopicWeaknessScores(
 export default async function ProblemsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ q?: string | string[]; difficulty?: string | string[]; track?: string | string[] }>
+  searchParams?: Promise<{
+    q?: string | string[]
+    difficulty?: string | string[]
+    track?: string | string[]
+    status?: string | string[]
+    sort?: string | string[]
+    topic?: string | string[]
+  }>
 }) {
   const session = await getServerSession(authOptions)
   const userId = session?.user?.id
@@ -115,6 +143,9 @@ export default async function ProblemsPage({
   const rawQuery = typeof params.q === "string" ? params.q : ""
   const rawDifficulty = typeof params.difficulty === "string" ? params.difficulty : ""
   const rawTrack = typeof params.track === "string" ? params.track : ""
+  const rawStatus = typeof params.status === "string" ? params.status : ""
+  const rawSort = typeof params.sort === "string" ? params.sort : ""
+  const rawTopic = typeof params.topic === "string" ? params.topic : ""
   const normalizedQuery = rawQuery.trim().toLowerCase()
   const selectedDifficulty =
     rawDifficulty === "Easy" || rawDifficulty === "Medium" || rawDifficulty === "Hard"
@@ -122,6 +153,21 @@ export default async function ProblemsPage({
       : ""
   const selectedTrack =
     CURATED_TRACKS.find((track) => track.slug === rawTrack)?.slug ?? ""
+  const selectedStatus =
+    rawStatus === "all" || rawStatus === "unsolved" || rawStatus === "solved" || rawStatus === "due"
+      ? rawStatus
+      : "all"
+  const selectedSort =
+    rawSort === "recommended" ||
+    rawSort === "leetcode-asc" ||
+    rawSort === "leetcode-desc" ||
+    rawSort === "difficulty-asc" ||
+    rawSort === "difficulty-desc" ||
+    rawSort === "title-asc"
+      ? rawSort
+      : userId
+        ? "recommended"
+        : "leetcode-asc"
 
   // Fetch problems from the database
   const problems = await prisma.problem.findMany({
@@ -152,19 +198,6 @@ export default async function ProblemsPage({
   const visibleProblems = selectedTrack
     ? problems.filter((problem) => trackProblemIds.has(problem.id))
     : problems
-
-  const filteredProblems = visibleProblems.filter((problem) => {
-    const matchesQuery =
-      normalizedQuery.length === 0 ||
-      problem.title.toLowerCase().includes(normalizedQuery) ||
-      problem.topicTags.toLowerCase().includes(normalizedQuery) ||
-      problem.leetcodeId.toString().includes(normalizedQuery)
-
-    const matchesDifficulty =
-      selectedDifficulty.length === 0 || problem.difficulty === selectedDifficulty
-
-    return matchesQuery && matchesDifficulty
-  })
 
   // Fetch solved problem IDs for the current user
   const solvedProblemIds = new Set<string>()
@@ -260,6 +293,72 @@ export default async function ProblemsPage({
   })()
 
   const topTopics = userId ? getTopScoredTopics(topicWeakness) : getTopTopics(visibleProblems)
+  const availableTopics = Array.from(
+    new Set(
+      visibleProblems.flatMap((problem) => problem.topicTags.split(", ").filter(Boolean)),
+    ),
+  ).sort((a, b) => a.localeCompare(b))
+  const selectedTopic = availableTopics.find((topic) => topic === rawTopic) ?? ""
+
+  const filteredProblems = visibleProblems
+    .filter((problem) => {
+      const matchesQuery =
+        normalizedQuery.length === 0 ||
+        problem.title.toLowerCase().includes(normalizedQuery) ||
+        problem.topicTags.toLowerCase().includes(normalizedQuery) ||
+        problem.leetcodeId.toString().includes(normalizedQuery)
+
+      const matchesDifficulty =
+        selectedDifficulty.length === 0 || problem.difficulty === selectedDifficulty
+
+      const matchesTopic =
+        selectedTopic.length === 0 ||
+        problem.topicTags.split(", ").some((tag) => tag === selectedTopic)
+
+      const matchesStatus =
+        selectedStatus === "all" ||
+        (selectedStatus === "solved" && solvedProblemIds.has(problem.id)) ||
+        (selectedStatus === "unsolved" && !solvedProblemIds.has(problem.id)) ||
+        (selectedStatus === "due" && dueProblemIds.has(problem.id))
+
+      return matchesQuery && matchesDifficulty && matchesTopic && matchesStatus
+    })
+    .sort((a, b) => {
+      if (selectedSort === "recommended") {
+        const leftDue = dueProblemIds.has(a.id) ? 1 : 0
+        const rightDue = dueProblemIds.has(b.id) ? 1 : 0
+        if (leftDue !== rightDue) return rightDue - leftDue
+
+        const leftSolved = solvedProblemIds.has(a.id) ? 1 : 0
+        const rightSolved = solvedProblemIds.has(b.id) ? 1 : 0
+        if (leftSolved !== rightSolved) return leftSolved - rightSolved
+
+        const scoreDiff = getProblemTopicScore(b, topicWeakness) - getProblemTopicScore(a, topicWeakness)
+        if (scoreDiff !== 0) return scoreDiff
+
+        return a.leetcodeId - b.leetcodeId
+      }
+
+      if (selectedSort === "leetcode-desc") {
+        return b.leetcodeId - a.leetcodeId
+      }
+
+      if (selectedSort === "difficulty-asc") {
+        const difficultyDiff = getDifficultyRank(a.difficulty) - getDifficultyRank(b.difficulty)
+        return difficultyDiff !== 0 ? difficultyDiff : a.leetcodeId - b.leetcodeId
+      }
+
+      if (selectedSort === "difficulty-desc") {
+        const difficultyDiff = getDifficultyRank(b.difficulty) - getDifficultyRank(a.difficulty)
+        return difficultyDiff !== 0 ? difficultyDiff : a.leetcodeId - b.leetcodeId
+      }
+
+      if (selectedSort === "title-asc") {
+        return a.title.localeCompare(b.title) || a.leetcodeId - b.leetcodeId
+      }
+
+      return a.leetcodeId - b.leetcodeId
+    })
 
   return (
     <div className="app-shell p-6 font-sans text-zinc-300 sm:p-8">
@@ -276,7 +375,7 @@ export default async function ProblemsPage({
         </header>
 
         <form
-          className="app-surface flex flex-col gap-3 rounded-2xl p-4 md:flex-row md:items-end"
+          className="app-surface grid gap-3 rounded-2xl p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,0.8fr))_auto_auto] xl:items-end"
           method="get"
         >
           <div className="flex-1 space-y-2">
@@ -328,6 +427,42 @@ export default async function ProblemsPage({
             </select>
           </div>
 
+          <div className="space-y-2">
+            <label htmlFor="status" className="text-sm font-medium text-zinc-200">
+              Status
+            </label>
+            <select
+              id="status"
+              name="status"
+              defaultValue={selectedStatus}
+              className="w-full rounded-lg border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none focus:border-[#d7ff4f]/60"
+            >
+              <option value="all">All statuses</option>
+              <option value="unsolved">Unsolved</option>
+              <option value="solved">Solved</option>
+              <option value="due">Due for review</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="sort" className="text-sm font-medium text-zinc-200">
+              Sort
+            </label>
+            <select
+              id="sort"
+              name="sort"
+              defaultValue={selectedSort}
+              className="w-full rounded-lg border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none focus:border-[#d7ff4f]/60"
+            >
+              <option value="recommended">Recommended</option>
+              <option value="leetcode-asc">LeetCode # ascending</option>
+              <option value="leetcode-desc">LeetCode # descending</option>
+              <option value="difficulty-asc">Difficulty: Easy to Hard</option>
+              <option value="difficulty-desc">Difficulty: Hard to Easy</option>
+              <option value="title-asc">Title: A to Z</option>
+            </select>
+          </div>
+
           <button
             type="submit"
             className="accent-button rounded-lg px-5 py-3 text-sm font-bold transition-colors"
@@ -357,7 +492,14 @@ export default async function ProblemsPage({
           {CURATED_TRACKS.map((track) => (
             <Link
               key={track.slug}
-              href={`/problems?track=${track.slug}${rawQuery ? `&q=${encodeURIComponent(rawQuery)}` : ""}${selectedDifficulty ? `&difficulty=${selectedDifficulty}` : ""}`}
+              href={buildProblemsQuery({
+                track: track.slug,
+                q: rawQuery || undefined,
+                difficulty: selectedDifficulty || undefined,
+                status: selectedStatus !== "all" ? selectedStatus : undefined,
+                sort: selectedSort !== (userId ? "recommended" : "leetcode-asc") ? selectedSort : undefined,
+                topic: selectedTopic || undefined,
+              })}
               className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
                 selectedTrack === track.slug
                   ? "border-[#d7ff4f]/35 bg-[#d7ff4f]/10 text-[#e4ff93]"
@@ -373,6 +515,66 @@ export default async function ProblemsPage({
           Showing {filteredProblems.length} of {visibleProblems.length} problems
           {selectedTrack ? ` in ${CURATED_TRACKS.find((track) => track.slug === selectedTrack)?.title}` : ""}.
         </p>
+
+        {availableTopics.length > 0 && (
+          <section className="space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium text-zinc-200">Topic filter</p>
+              {selectedTopic ? (
+                <Link
+                  href={buildProblemsQuery({
+                    q: rawQuery || undefined,
+                    difficulty: selectedDifficulty || undefined,
+                    track: selectedTrack || undefined,
+                    status: selectedStatus !== "all" ? selectedStatus : undefined,
+                    sort: selectedSort !== (userId ? "recommended" : "leetcode-asc") ? selectedSort : undefined,
+                  })}
+                  className="text-sm text-zinc-400 transition-colors hover:text-white"
+                >
+                  Clear topic
+                </Link>
+              ) : null}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href={buildProblemsQuery({
+                  q: rawQuery || undefined,
+                  difficulty: selectedDifficulty || undefined,
+                  track: selectedTrack || undefined,
+                  status: selectedStatus !== "all" ? selectedStatus : undefined,
+                  sort: selectedSort !== (userId ? "recommended" : "leetcode-asc") ? selectedSort : undefined,
+                })}
+                className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                  selectedTopic === ""
+                    ? "border-[#d7ff4f]/35 bg-[#d7ff4f]/10 text-[#e4ff93]"
+                    : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
+                }`}
+              >
+                All topics
+              </Link>
+              {availableTopics.slice(0, 18).map((topic) => (
+                <Link
+                  key={topic}
+                  href={buildProblemsQuery({
+                    q: rawQuery || undefined,
+                    difficulty: selectedDifficulty || undefined,
+                    track: selectedTrack || undefined,
+                    status: selectedStatus !== "all" ? selectedStatus : undefined,
+                    sort: selectedSort !== (userId ? "recommended" : "leetcode-asc") ? selectedSort : undefined,
+                    topic,
+                  })}
+                  className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                    selectedTopic === topic
+                      ? "border-[#d7ff4f]/35 bg-[#d7ff4f]/10 text-[#e4ff93]"
+                      : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
+                  }`}
+                >
+                  {topic}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {userId && (
           <section className="grid gap-4 md:grid-cols-[1.6fr_1fr_1fr]">
