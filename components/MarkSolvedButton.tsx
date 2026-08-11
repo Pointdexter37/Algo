@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useTransition } from "react"
 import { markProblemAsSolved } from "@/app/actions/problems"
 
 interface MarkSolvedButtonProps {
@@ -21,8 +21,8 @@ export default function MarkSolvedButton({ problemId, isSolved = false }: MarkSo
       try {
         await markProblemAsSolved(problemId, timeSpent, difficultyRating)
         alert("Awesome! Problem marked as solved.")
-      } catch (error: any) {
-        alert(error.message || "Failed to mark as solved.")
+      } catch (error) {
+        alert(error instanceof Error ? error.message : "Failed to mark as solved.")
       }
     })
   }
