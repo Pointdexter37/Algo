@@ -90,52 +90,31 @@ body::before {
   box-shadow: 0 14px 38px rgba(215, 255, 79, 0.2);
 }
 
+/* Existing animations */
 @keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(22px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes scan {
-  0% { transform: translateX(-120%); }
-  100% { transform: translateX(340%); }
-}
+@keyframes scan { 0% { transform: translateX(-120%); } 100% { transform: translateX(340%); } }
+@keyframes pulse-dot { 0%,100% { box-shadow: 0 0 0 0 rgba(215,255,79,0.32);} 50% { box-shadow: 0 0 0 8px rgba(215,255,79,0); } }
+@keyframes drift { 0%,100% { transform: translate3d(0,0,0);} 50% { transform: translate3d(0,-9px,0);} }
 
-@keyframes pulse-dot {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(215, 255, 79, 0.32); }
-  50% { box-shadow: 0 0 0 8px rgba(215, 255, 79, 0); }
-}
+.animate-rise-in { animation: rise-in 700ms cubic-bezier(0.22,1,0.36,1) both; }
+.animate-scan { animation: scan 4.5s ease-in-out infinite; }
+.animate-pulse-dot { animation: pulse-dot 2.8s ease-out infinite; }
+.animate-drift { animation: drift 8s ease-in-out infinite; }
 
-@keyframes drift {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(0, -9px, 0); }
-}
+/* New animations for extra UI polish */
+@keyframes fade-up { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pop { 0% { transform: scale(.985); opacity: 0 } 60% { transform: scale(1.02); opacity: 1 } 100% { transform: scale(1); } }
+@keyframes subtle-wiggle { 0% { transform: translateX(0);} 50% { transform: translateX(4px);} 100% { transform: translateX(0);} }
 
-.animate-rise-in {
-  animation: rise-in 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
+.animate-fade-up { animation: fade-up 640ms cubic-bezier(.22,1,.36,1) both; }
+.animate-pop { animation: pop 560ms cubic-bezier(.2,.9,.2,1) both; }
+.animate-wiggle { animation: subtle-wiggle 6s ease-in-out infinite; }
 
-.animate-scan {
-  animation: scan 4.5s ease-in-out infinite;
-}
-
-.animate-pulse-dot {
-  animation: pulse-dot 2.8s ease-out infinite;
-}
-
-.animate-drift {
-  animation: drift 8s ease-in-out infinite;
-}
-
+/* Utility to respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
-  }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
 }
