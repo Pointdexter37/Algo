@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { saveUserPreferences } from "@/app/actions/preferences"
 
 const studyTracks = [
   {
@@ -56,32 +57,43 @@ export default async function RoadmapPage() {
             const selected = preferences?.targetRoadmap === item.title
 
             return (
-            <div
-              key={item.title}
-              className={`flex flex-col gap-3 rounded-2xl border p-5 ${
-                selected
-                  ? "border-[#d7ff4f]/35 bg-[#d7ff4f]/[0.08] shadow-[0_18px_50px_rgba(215,255,79,0.06)]"
-                  : "app-surface"
-              }`}
-            >
-              <div className="space-y-1">
-                <h2 className="text-lg font-semibold text-white">{item.title}</h2>
-                <p className="text-sm text-zinc-400">{item.subtitle}</p>
-                <p className="max-w-3xl text-sm leading-6 text-zinc-400">{item.description}</p>
-                <p className="text-sm font-medium text-zinc-200">{item.focus}</p>
+            <form key={item.title} action={saveUserPreferences}>
+              <input type="hidden" name="targetRoadmap" value={item.title} />
+              <div
+                className={`flex flex-col gap-3 rounded-2xl border p-5 ${
+                  selected
+                    ? "border-[#d7ff4f]/35 bg-[#d7ff4f]/[0.08] shadow-[0_18px_50px_rgba(215,255,79,0.06)]"
+                    : "app-surface"
+                }`}
+              >
+                <div className="space-y-1">
+                  <h2 className="text-lg font-semibold text-white">{item.title}</h2>
+                  <p className="text-sm text-zinc-400">{item.subtitle}</p>
+                  <p className="max-w-3xl text-sm leading-6 text-zinc-400">{item.description}</p>
+                  <p className="text-sm font-medium text-zinc-200">{item.focus}</p>
+                </div>
+                <div className="flex flex-wrap gap-2 items-center">
+                  <span
+                    className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${
+                      selected
+                        ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+                        : "border-white/10 bg-white/5 text-zinc-300"
+                    }`}
+                  >
+                    {selected ? "Selected" : "Available"}
+                  </span>
+
+                  {!selected ? (
+                    <button
+                      type="submit"
+                      className="ml-2 inline-flex items-center rounded-md border border-white/10 bg-white/6 px-3 py-1 text-xs font-medium text-zinc-200 hover:bg-white/10"
+                    >
+                      Select
+                    </button>
+                  ) : null}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <span
-                  className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${
-                    selected
-                      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
-                      : "border-white/10 bg-white/5 text-zinc-300"
-                  }`}
-                >
-                  {selected ? "Selected" : "Available"}
-                </span>
-              </div>
-            </div>
+            </form>
             )
           })}
         </section>
