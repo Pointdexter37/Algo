@@ -11,6 +11,7 @@ export default function Home() {
     <main className="app-shell relative isolate overflow-hidden">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#d7ff4f]/60 to-transparent" />
 
+      {/* Hero */}
       <section className="mx-auto grid min-h-[calc(100vh-92px)] max-w-6xl gap-14 px-6 py-16 sm:px-8 lg:grid-cols-[1.08fr_0.92fr] lg:items-center lg:py-20">
         <div className="animate-rise-in">
           <div className="mb-8 inline-flex items-center gap-3 rounded-full border border-[#d7ff4f]/20 bg-[#d7ff4f]/[0.06] px-3 py-2 text-xs font-medium text-[#e4ff93]">
@@ -110,6 +111,50 @@ export default function Home() {
             <GitHubMark />
             Built in public. View source code
           </a>
+        </div>
+      </section>
+
+      {/* Extended landing length: features, testimonials, CTA */}
+      <section className="mx-auto max-w-6xl px-6 pb-28 sm:px-8">
+        <div className="mt-6 grid gap-8 sm:grid-cols-3">
+          {[
+            { title: "Curated tracks", desc: "Hand-picked sequences to cover core patterns.", delay: 80 },
+            { title: "Honest progress", desc: "Track real solves, time and confidence.", delay: 160 },
+            { title: "Spaced reviews", desc: "SM-2 powered reviews delivered when they matter.", delay: 240 },
+          ].map((f, i) => (
+            <div key={f.title} className="rounded-2xl border border-white/8 bg-[#0b0b0b]/60 p-6 shadow-md transition-transform hover:scale-[1.02]" style={{ animationDelay: `${f.delay}ms` }}>
+              <h3 className="text-lg font-bold text-white">{f.title}</h3>
+              <p className="mt-2 text-sm text-zinc-400">{f.desc}</p>
+              <div className="mt-4 inline-flex items-center gap-2 text-sm text-[#d7ff4f]">Learn more →</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-12 grid gap-8 lg:grid-cols-2">
+          <div className="rounded-2xl border border-white/8 bg-gradient-to-br from-[#07110a]/60 to-[#0b0d10]/60 p-6 shadow-lg animate-rise-in" style={{ animationDelay: "100ms" }}>
+            <h3 className="text-xl font-bold">Built to form a habit</h3>
+            <p className="mt-3 text-sm text-zinc-400">Tiny deliberate sessions, immediate feedback, and spaced review make consistent progress inevitable.</p>
+            <div className="mt-5 flex gap-3">
+              <Link href="/onboarding" className="accent-button rounded-xl px-4 py-2 text-sm font-bold">Get started</Link>
+              <Link href="/problems" className="inline-flex items-center rounded-xl border border-white/12 bg-white/[0.02] px-4 py-2 text-sm font-semibold text-zinc-200">Browse problems</Link>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-white/8 bg-[#090909]/60 p-6 shadow-lg animate-rise-in" style={{ animationDelay: "200ms" }}>
+            <h3 className="text-xl font-bold">What learners say</h3>
+            <div className="mt-4 space-y-4">
+              <blockquote className="rounded-lg border border-white/6 p-4 text-sm text-zinc-300">"Compact sessions helped me keep patterns fresh between interviews." — S</blockquote>
+              <blockquote className="rounded-lg border border-white/6 p-4 text-sm text-zinc-300">"Tracks made it simple to focus on what's high-impact." — A</blockquote>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-14 text-center">
+          <p className="text-sm text-zinc-400">Still curious? Try a session and return next week — the review will remind you what matters.</p>
+          <div className="mt-6 inline-flex items-center gap-3">
+            <Link href="/problems" className="accent-button rounded-xl px-6 py-3 text-sm font-bold">Start practicing</Link>
+            <Link href="/roadmap" className="inline-flex items-center rounded-xl border border-white/12 bg-white/[0.02] px-6 py-3 text-sm font-semibold text-zinc-200">See tracks</Link>
+          </div>
         </div>
       </section>
     </main>
