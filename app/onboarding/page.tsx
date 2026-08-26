@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { saveUserPreferences } from "@/app/actions/preferences"
 import { redirect } from "next/navigation"
+import { CURATED_TRACKS } from "@/lib/studyTracks"
 
 export default async function OnboardingPage() {
   const session = await getServerSession(authOptions)
@@ -14,6 +15,10 @@ export default async function OnboardingPage() {
   const preferences = await prisma.userPreference.findUnique({
     where: { userId: session.user.id },
   })
+
+  const defaultTrack =
+    CURATED_TRACKS.find((track) => track.title === preferences?.targetRoadmap)?.title ??
+    CURATED_TRACKS[0].title
 
   return (
     <main className="min-h-screen bg-[#0a0a0a] px-6 py-12 text-zinc-100">
@@ -35,19 +40,21 @@ export default async function OnboardingPage() {
           action={saveUserPreferences}
           className="space-y-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6"
         >
-            <div className="grid gap-2">
-              <label htmlFor="targetRoadmap" className="text-sm font-medium text-zinc-200">
+          <div className="grid gap-2">
+            <label htmlFor="targetRoadmap" className="text-sm font-medium text-zinc-200">
               Study track
-              </label>
+            </label>
             <select
               id="targetRoadmap"
               name="targetRoadmap"
-              defaultValue={preferences?.targetRoadmap ?? "NeetCode 150"}
+              defaultValue={defaultTrack}
               className="rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-indigo-400"
             >
-              <option value="NeetCode 150">NeetCode 150</option>
-              <option value="Striver A to Z">Striver A to Z</option>
-              <option value="SDE Sheet">SDE Sheet</option>
+              {CURATED_TRACKS.map((track) => (
+                <option key={track.slug} value={track.title}>
+                  {track.title}
+                </option>
+              ))}
             </select>
           </div>
 
