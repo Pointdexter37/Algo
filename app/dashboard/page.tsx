@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
+import { CURATED_TRACKS } from "@/lib/studyTracks"
 
 function getDateKey(date: Date) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -60,6 +61,10 @@ function getTimeKey(date: Date) {
   }).format(date)
 }
 
+function getTrackSlug(targetRoadmap: string | null | undefined) {
+  return CURATED_TRACKS.find((track) => track.title === targetRoadmap)?.slug
+}
+
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
 
@@ -74,12 +79,16 @@ export default async function DashboardPage() {
     prisma.userProgress.findMany({
       where: { userId },
       select: {
+        problemId: true,
         nextReviewDate: true,
         problem: {
           select: {
+            id: true,
+            leetcodeId: true,
+            title: true,
+            url: true,
             difficulty: true,
             topicTags: true,
-            title: true,
           },
         },
       },
@@ -104,12 +113,62 @@ export default async function DashboardPage() {
   ])
 
   const now = new Date()
+  const todayKey = getDateKey(now)
+  const startOfToday = new Date(`${todayKey}T00:00:00+05:30`)
+  const todaySubmissions = await prisma.submission.findMany({
+    where: {
+      userId,
+      submittedAt: { gte: startOfToday },
+    },
+    select: { problemId: true },
+  })
+  const trackSlug = getTrackSlug(preferences?.targetRoadmap)
+  const selectedTrack = trackSlug
+    ? await prisma.studyTrack.findUnique({
+        where: { slug: trackSlug },
+        select: {
+          problems: {
+            select: {
+              problem: {
+                select: {
+                  id: true,
+                  leetcodeId: true,
+                  title: true,
+                  url: true,
+                  difficulty: true,
+                  topicTags: true,
+                },
+              },
+            },
+          },
+        },
+      })
+    : null
+  const planProblems = selectedTrack?.problems.map((item) => item.problem) ??
+    (await prisma.problem.findMany({
+      orderBy: { leetcodeId: "asc" },
+      take: 250,
+      select: {
+        id: true,
+        leetcodeId: true,
+        title: true,
+        url: true,
+        difficulty: true,
+        topicTags: true,
+      },
+    }))
+  const planProblemIds = new Set(planProblems.map((problem) => problem.id))
+  const completedToday = new Set(todaySubmissions.map((submission) => submission.problemId))
   const dueProgress = progress.filter((item) => item.nextReviewDate <= now)
   const dueCount = dueProgress.length
   const solvedCount = progress.length
   const streak = getCurrentStreak(submissions.map((item) => item.submittedAt))
-  const todayKey = getDateKey(now)
-  const hasActivityToday = submissions.some((item) => getDateKey(item.submittedAt) === todayKey)
+  const hasActivityToday = completedToday.size > 0
+  const dailyGoal = Math.max(1, preferences?.dailyGoal ?? 3)
+  const dailyGoalCompleted = Array.from(completedToday).filter((problemId) =>
+    planProblemIds.has(problemId),
+  ).length
+  const dailyGoalPercent = Math.min(100, Math.round((dailyGoalCompleted / dailyGoal) * 100))
   const reminderTime = preferences?.studyReminderTime ?? ""
   const currentTimeKey = getTimeKey(now)
   const shouldShowReminder =
@@ -125,6 +184,25 @@ export default async function DashboardPage() {
     { Easy: 0, Medium: 0, Hard: 0 } as Record<string, number>,
   )
   const topWeakTopics = getTopTopics(dueProgress.map((item) => item.problem))
+  const duePlanProblem = planProblems.find(
+    (problem) => progress.some(
+      (item) => item.problemId === problem.id && item.nextReviewDate <= now,
+    ),
+  )
+  const nextPlanProblem =
+    duePlanProblem ??
+    planProblems.find(
+      (problem) =>
+        !progress.some((item) => item.problemId === problem.id) &&
+        (!preferences?.preferredDifficulty || problem.difficulty === preferences.preferredDifficulty),
+    ) ??
+    planProblems.find((problem) => !progress.some((item) => item.problemId === problem.id)) ??
+    null
+  const planActionQuery = trackSlug
+    ? `track=${trackSlug}&${duePlanProblem ? "status=due" : "status=unsolved"}`
+    : duePlanProblem
+      ? "status=due"
+      : "status=unsolved"
 
   return (
     <main className="app-shell px-6 py-12 text-zinc-100">
@@ -165,6 +243,33 @@ export default async function DashboardPage() {
               <span className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-zinc-300">
                 {preferences?.preferredDifficulty ?? "Any difficulty"}
               </span>
+            </div>
+            <div className="mt-5 rounded-xl border border-white/10 bg-black/20 p-4">
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="font-medium text-zinc-200">Today’s plan</span>
+                <span className="text-zinc-400">
+                  {dailyGoalCompleted} / {dailyGoal} complete
+                </span>
+              </div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/5">
+                <div
+                  className="h-full rounded-full bg-[#d7ff4f] transition-all"
+                  style={{ width: `${dailyGoalPercent}%` }}
+                />
+              </div>
+              <p className="mt-3 text-sm text-zinc-400">
+                {nextPlanProblem
+                  ? `${duePlanProblem ? "Next review" : "Next problem"}: ${nextPlanProblem.title}`
+                  : "You have completed every problem in this roadmap."}
+              </p>
+              {nextPlanProblem ? (
+                <Link
+                  href={`/problems?${planActionQuery}`}
+                  className="mt-3 inline-flex items-center rounded-lg bg-[#d7ff4f] px-4 py-2 text-sm font-bold text-black transition-colors hover:bg-[#e4ff93]"
+                >
+                  Start today’s plan
+                </Link>
+              ) : null}
             </div>
           </div>
 
