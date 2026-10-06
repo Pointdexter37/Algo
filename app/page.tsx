@@ -121,7 +121,7 @@ export default function Home() {
             { title: "Curated tracks", desc: "Hand-picked sequences to cover core patterns.", delay: 80 },
             { title: "Honest progress", desc: "Track real solves, time and confidence.", delay: 160 },
             { title: "Spaced reviews", desc: "SM-2 powered reviews delivered when they matter.", delay: 240 },
-          ].map((f, i) => (
+          ].map((f) => (
             <div key={f.title} className="rounded-2xl border border-white/8 bg-[#0b0b0b]/60 p-6 shadow-md transition-transform hover:scale-[1.02]" style={{ animationDelay: `${f.delay}ms` }}>
               <h3 className="text-lg font-bold text-white">{f.title}</h3>
               <p className="mt-2 text-sm text-zinc-400">{f.desc}</p>
@@ -143,8 +143,8 @@ export default function Home() {
           <div className="rounded-2xl border border-white/8 bg-[#090909]/60 p-6 shadow-lg animate-rise-in" style={{ animationDelay: "200ms" }}>
             <h3 className="text-xl font-bold">What learners say</h3>
             <div className="mt-4 space-y-4">
-              <blockquote className="rounded-lg border border-white/6 p-4 text-sm text-zinc-300">"Compact sessions helped me keep patterns fresh between interviews." — S</blockquote>
-              <blockquote className="rounded-lg border border-white/6 p-4 text-sm text-zinc-300">"Tracks made it simple to focus on what's high-impact." — A</blockquote>
+              <blockquote className="rounded-lg border border-white/6 p-4 text-sm text-zinc-300">&ldquo;Compact sessions helped me keep patterns fresh between interviews.&rdquo; — S</blockquote>
+              <blockquote className="rounded-lg border border-white/6 p-4 text-sm text-zinc-300">&ldquo;Tracks made it simple to focus on what&apos;s high-impact.&rdquo; — A</blockquote>
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { authOptions } from "@/lib/auth"
 import { getServerSession } from "next-auth/next"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { CURATED_TRACKS } from "@/lib/studyTracks"
 
 export async function saveUserPreferences(formData: FormData) {
   const session = await getServerSession(authOptions)
@@ -20,44 +21,52 @@ export async function saveUserPreferences(formData: FormData) {
   const studyReminderEnabled = formData.get("studyReminderEnabled")
   const studyReminderTime = formData.get("studyReminderTime")
   const targetInterviewDate = formData.get("targetInterviewDate")
+  const dailyGoalValue = typeof dailyGoal === "string" ? Number(dailyGoal) : 3
+  const roadmapValue = typeof targetRoadmap === "string" ? targetRoadmap.trim() : ""
+  const difficultyValue = typeof preferredDifficulty === "string" ? preferredDifficulty.trim() : ""
+
+  if (!CURATED_TRACKS.some((track) => track.title === roadmapValue)) {
+    throw new Error("Please choose a valid study track.")
+  }
+  if (!Number.isInteger(dailyGoalValue) || dailyGoalValue < 1 || dailyGoalValue > 20) {
+    throw new Error("Daily goal must be between 1 and 20.")
+  }
+  if (!["Easy", "Medium", "Hard"].includes(difficultyValue)) {
+    throw new Error("Please choose a valid difficulty.")
+  }
+
+  const interviewDateValue =
+    typeof targetInterviewDate === "string" && targetInterviewDate
+      ? new Date(`${targetInterviewDate}T00:00:00.000Z`)
+      : null
+  if (interviewDateValue && Number.isNaN(interviewDateValue.getTime())) {
+    throw new Error("Please choose a valid interview date.")
+  }
 
   await prisma.userPreference.upsert({
     where: { userId },
     update: {
-      targetRoadmap: typeof targetRoadmap === "string" && targetRoadmap.trim() ? targetRoadmap.trim() : null,
-      dailyGoal: typeof dailyGoal === "string" ? Number(dailyGoal) : 3,
-      preferredDifficulty:
-        typeof preferredDifficulty === "string" && preferredDifficulty.trim()
-          ? preferredDifficulty.trim()
-          : null,
+      targetRoadmap: roadmapValue,
+      dailyGoal: dailyGoalValue,
+      preferredDifficulty: difficultyValue,
       studyReminderEnabled: studyReminderEnabled === "on",
       studyReminderTime:
         typeof studyReminderTime === "string" && studyReminderTime.trim()
           ? studyReminderTime.trim()
           : null,
-      targetInterviewDate:
-        typeof targetInterviewDate === "string" && targetInterviewDate
-          ? new Date(targetInterviewDate)
-          : null,
+      targetInterviewDate: interviewDateValue,
     },
     create: {
       userId,
-      targetRoadmap:
-        typeof targetRoadmap === "string" && targetRoadmap.trim() ? targetRoadmap.trim() : null,
-      dailyGoal: typeof dailyGoal === "string" ? Number(dailyGoal) : 3,
-      preferredDifficulty:
-        typeof preferredDifficulty === "string" && preferredDifficulty.trim()
-          ? preferredDifficulty.trim()
-          : null,
+      targetRoadmap: roadmapValue,
+      dailyGoal: dailyGoalValue,
+      preferredDifficulty: difficultyValue,
       studyReminderEnabled: studyReminderEnabled === "on",
       studyReminderTime:
         typeof studyReminderTime === "string" && studyReminderTime.trim()
           ? studyReminderTime.trim()
           : null,
-      targetInterviewDate:
-        typeof targetInterviewDate === "string" && targetInterviewDate
-          ? new Date(targetInterviewDate)
-          : null,
+      targetInterviewDate: interviewDateValue,
     },
   })
 

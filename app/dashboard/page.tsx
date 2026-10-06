@@ -465,6 +465,12 @@ export default async function DashboardPage() {
           >
             Edit study goals
           </Link>
+          <Link
+            href="/session"
+            className="accent-button inline-flex items-center rounded-lg px-5 py-3 text-sm font-bold transition-colors"
+          >
+            Start daily session
+          </Link>
         </div>
       </div>
     </main>

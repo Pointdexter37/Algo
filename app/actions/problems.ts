@@ -14,63 +14,57 @@ export async function markProblemAsSolved(problemId: string, timeSpent: number, 
   }
 
   const userId = session.user.id as string
+  const problem = await prisma.problem.findUnique({ where: { id: problemId }, select: { id: true } })
+  if (!problem) {
+    throw new Error("Problem not found.")
+  }
 
-  // 1. Create a submission
-  await prisma.submission.create({
-    data: {
-      userId,
-      problemId,
-      status: "Accepted",
-      timeSpent,
-    }
-  })
+  if (!Number.isInteger(timeSpent) || timeSpent < 1 || timeSpent > 1440) {
+    throw new Error("Time spent must be between 1 and 1440 minutes.")
+  }
 
-  // 2. Update or Create UserProgress using SM-2
-  const existingProgress = await prisma.userProgress.findUnique({
-    where: {
-      userId_problemId: { userId, problemId }
-    }
-  });
+  if (!Number.isInteger(difficultyRating) || difficultyRating < 0 || difficultyRating > 5) {
+    throw new Error("Difficulty rating must be between 0 and 5.")
+  }
 
-  const currentRepetitions = existingProgress?.repetitions ?? 0;
-  const currentEaseFactor = existingProgress?.easeFactor ?? 2.5;
-  const currentInterval = existingProgress?.interval ?? 0;
+  await prisma.$transaction(async (transaction) => {
+    const existingProgress = await transaction.userProgress.findUnique({
+      where: { userId_problemId: { userId, problemId } },
+    })
+    const { nextInterval, nextRepetitions, nextEaseFactor } = calculateSM2(
+      difficultyRating,
+      existingProgress?.repetitions ?? 0,
+      existingProgress?.easeFactor ?? 2.5,
+      existingProgress?.interval ?? 0,
+    )
+    const nextReviewDate = new Date()
+    nextReviewDate.setDate(nextReviewDate.getDate() + nextInterval)
 
-  const { nextInterval, nextRepetitions, nextEaseFactor } = calculateSM2(
-    difficultyRating,
-    currentRepetitions,
-    currentEaseFactor,
-    currentInterval
-  );
-
-  const nextReviewDate = new Date();
-  nextReviewDate.setDate(nextReviewDate.getDate() + nextInterval);
-
-  await prisma.userProgress.upsert({
-    where: {
-      userId_problemId: {
+    await transaction.submission.create({
+      data: { userId, problemId, status: "Accepted", timeSpent },
+    })
+    await transaction.userProgress.upsert({
+      where: { userId_problemId: { userId, problemId } },
+      update: {
+        difficultyRating,
+        repetitions: nextRepetitions,
+        interval: nextInterval,
+        easeFactor: nextEaseFactor,
+        nextReviewDate,
+      },
+      create: {
         userId,
         problemId,
-      }
-    },
-    update: {
-      difficultyRating,
-      repetitions: nextRepetitions,
-      interval: nextInterval,
-      easeFactor: nextEaseFactor,
-      nextReviewDate,
-    },
-    create: {
-      userId,
-      problemId,
-      difficultyRating,
-      repetitions: nextRepetitions,
-      interval: nextInterval,
-      easeFactor: nextEaseFactor,
-      nextReviewDate,
-    }
+        difficultyRating,
+        repetitions: nextRepetitions,
+        interval: nextInterval,
+        easeFactor: nextEaseFactor,
+        nextReviewDate,
+      },
+    })
   })
 
   // Refresh the UI to show the new status
   revalidatePath("/problems")
+  revalidatePath("/session")
 }

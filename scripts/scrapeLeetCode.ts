@@ -197,6 +197,7 @@ async function seedProblems() {
     console.log(`✅ Seeding complete! Processed ${processedCount} problems.`)
   } catch (error) {
     console.error("Error seeding problems:", error)
+    process.exitCode = 1
   } finally {
     await prisma.$disconnect()
   }
