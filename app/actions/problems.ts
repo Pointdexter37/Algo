@@ -6,7 +6,20 @@ import { authOptions } from "@/lib/auth"
 import { calculateSM2 } from "@/lib/sm2"
 import { revalidatePath } from "next/cache"
 
-export async function markProblemAsSolved(problemId: string, timeSpent: number, difficultyRating: number) {
+export type ReviewFeedback = {
+  confidenceBefore?: number
+  confidenceAfter?: number
+  hintsUsed?: number
+  notes?: string
+  outcome?: "Solved" | "Attempted"
+}
+
+export async function markProblemAsSolved(
+  problemId: string,
+  timeSpent: number,
+  difficultyRating: number,
+  feedback: ReviewFeedback = {},
+) {
   const session = await getServerSession(authOptions)
   
   if (!session || !session.user || !session.user.id) {
@@ -26,6 +39,20 @@ export async function markProblemAsSolved(problemId: string, timeSpent: number, 
   if (!Number.isInteger(difficultyRating) || difficultyRating < 0 || difficultyRating > 5) {
     throw new Error("Difficulty rating must be between 0 and 5.")
   }
+  const confidenceBefore = feedback.confidenceBefore ?? null
+  const confidenceAfter = feedback.confidenceAfter ?? null
+  const hintsUsed = feedback.hintsUsed ?? 0
+  if (
+    (confidenceBefore !== null && (!Number.isInteger(confidenceBefore) || confidenceBefore < 1 || confidenceBefore > 5)) ||
+    (confidenceAfter !== null && (!Number.isInteger(confidenceAfter) || confidenceAfter < 1 || confidenceAfter > 5))
+  ) {
+    throw new Error("Confidence must be between 1 and 5.")
+  }
+  if (!Number.isInteger(hintsUsed) || hintsUsed < 0 || hintsUsed > 50) {
+    throw new Error("Hints used must be between 0 and 50.")
+  }
+  const notes = feedback.notes?.trim() || null
+  const outcome = feedback.outcome === "Attempted" ? "Attempted" : "Solved"
 
   await prisma.$transaction(async (transaction) => {
     const existingProgress = await transaction.userProgress.findUnique({
@@ -41,7 +68,20 @@ export async function markProblemAsSolved(problemId: string, timeSpent: number, 
     nextReviewDate.setDate(nextReviewDate.getDate() + nextInterval)
 
     await transaction.submission.create({
-      data: { userId, problemId, status: "Accepted", timeSpent },
+      data: { userId, problemId, status: outcome === "Solved" ? "Accepted" : "Attempted", timeSpent },
+    })
+    await transaction.reviewAttempt.create({
+      data: {
+        userId,
+        problemId,
+        rating: difficultyRating,
+        confidenceBefore,
+        confidenceAfter,
+        hintsUsed,
+        notes,
+        timeSpent,
+        outcome,
+      },
     })
     await transaction.userProgress.upsert({
       where: { userId_problemId: { userId, problemId } },
@@ -67,4 +107,7 @@ export async function markProblemAsSolved(problemId: string, timeSpent: number, 
   // Refresh the UI to show the new status
   revalidatePath("/problems")
   revalidatePath("/session")
+  revalidatePath(`/problems/${problemId}`)
+  revalidatePath("/profile")
+  revalidatePath("/dashboard")
 }
