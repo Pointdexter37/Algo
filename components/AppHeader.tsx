@@ -24,6 +24,7 @@ export default function AppHeader({ session }: { session: Session | null }) {
     { href: "/dashboard", label: "Dashboard" },
     { href: "/problems", label: "Problems" },
     { href: "/reviews", label: "Reviews" },
+    { href: "/analytics", label: "Analytics" },
     { href: "/roadmap", label: "Roadmap" },
     { href: "/profile", label: "Profile" },
   ]

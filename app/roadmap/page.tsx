@@ -35,6 +35,15 @@ export default async function RoadmapPage() {
   })
 
   const selectedRoadmap = normalizeRoadmapSelection(preferences?.targetRoadmap)
+  const daysUntilInterview = preferences?.targetInterviewDate
+    ? Math.max(
+        0,
+        Math.ceil(
+          (preferences.targetInterviewDate.getTime() - new Date().getTime()) /
+            (1000 * 60 * 60 * 24),
+        ),
+      )
+    : null
 
   const progress = await prisma.userProgress.findMany({
     where: { userId: session.user.id },
@@ -86,6 +95,11 @@ export default async function RoadmapPage() {
             Pick the path you want AlgoPilot to optimize for. Each track shows how much of the set
             you have already completed and what is due for review.
           </p>
+          {daysUntilInterview !== null ? (
+            <p className="inline-flex rounded-full border border-[#d7ff4f]/20 bg-[#d7ff4f]/[0.08] px-3 py-1.5 text-sm text-[#e4ff93]">
+              {daysUntilInterview === 0 ? "Interview target is today." : `${daysUntilInterview} days until your interview target.`}
+            </p>
+          ) : null}
         </section>
 
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
