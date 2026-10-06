@@ -738,13 +738,19 @@ export default async function ProblemsPage({
                       />
                     </td>
                     <td className="px-6 py-4">
-                      <Link 
-                        href={problem.url}
-                        target="_blank"
-                        rel="noopener noreferrer" 
+                      <Link
+                        href={`/problems/${problem.id}`}
                         className="text-base font-medium text-zinc-200 transition-colors hover:text-[#d7ff4f]"
                       >
                         {problem.leetcodeId}. {problem.title}
+                      </Link>
+                      <Link
+                        href={problem.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-3 text-xs text-zinc-500 hover:text-[#d7ff4f]"
+                      >
+                        Open source
                       </Link>
                       {problem.isPremium && (
                         <span className="ml-3 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
