@@ -14,6 +14,10 @@ export default function MarkSolvedModal({ problemId, isSolved = false, isDue = f
   const [isOpen, setIsOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [timeSpent, setTimeSpent] = useState("15")
+  const [confidenceBefore, setConfidenceBefore] = useState("3")
+  const [confidenceAfter, setConfidenceAfter] = useState("4")
+  const [hintsUsed, setHintsUsed] = useState("0")
+  const [notes, setNotes] = useState("")
   const modalRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -37,12 +41,24 @@ export default function MarkSolvedModal({ problemId, isSolved = false, isDue = f
   const handleRating = (rating: number) => {
     const parsedTimeSpent = Number(timeSpent)
     const safeTimeSpent = Number.isFinite(parsedTimeSpent) && parsedTimeSpent > 0 ? parsedTimeSpent : 15
+    const parsedBefore = Number(confidenceBefore)
+    const parsedAfter = Number(confidenceAfter)
+    const parsedHints = Number(hintsUsed)
 
     startTransition(async () => {
       try {
-        await markProblemAsSolved(problemId, safeTimeSpent, rating)
+        await markProblemAsSolved(problemId, safeTimeSpent, rating, {
+          confidenceBefore: Number.isInteger(parsedBefore) ? parsedBefore : 3,
+          confidenceAfter: Number.isInteger(parsedAfter) ? parsedAfter : 4,
+          hintsUsed: Number.isInteger(parsedHints) && parsedHints >= 0 ? parsedHints : 0,
+          notes,
+        })
         setIsOpen(false)
         setTimeSpent("15")
+        setConfidenceBefore("3")
+        setConfidenceAfter("4")
+        setHintsUsed("0")
+        setNotes("")
         alert(isDue ? "Review recorded!" : "Awesome! Problem marked as solved.")
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : "Failed to save."
@@ -118,6 +134,53 @@ export default function MarkSolvedModal({ problemId, isSolved = false, isDue = f
                     className="w-full rounded-lg border border-white/10 bg-[#111111] px-3 py-2 text-sm text-white outline-none focus:border-indigo-400"
                   />
                 </div>
+
+                <div className="mb-4 grid gap-3 sm:grid-cols-3">
+                  <label className="grid gap-2 text-xs font-medium text-zinc-300">
+                    Confidence before
+                    <input
+                      type="number"
+                      min={1}
+                      max={5}
+                      value={confidenceBefore}
+                      onChange={(event) => setConfidenceBefore(event.target.value)}
+                      className="w-full rounded-lg border border-white/10 bg-[#111111] px-3 py-2 text-sm text-white outline-none focus:border-indigo-400"
+                    />
+                  </label>
+                  <label className="grid gap-2 text-xs font-medium text-zinc-300">
+                    Confidence after
+                    <input
+                      type="number"
+                      min={1}
+                      max={5}
+                      value={confidenceAfter}
+                      onChange={(event) => setConfidenceAfter(event.target.value)}
+                      className="w-full rounded-lg border border-white/10 bg-[#111111] px-3 py-2 text-sm text-white outline-none focus:border-indigo-400"
+                    />
+                  </label>
+                  <label className="grid gap-2 text-xs font-medium text-zinc-300">
+                    Hints used
+                    <input
+                      type="number"
+                      min={0}
+                      max={50}
+                      value={hintsUsed}
+                      onChange={(event) => setHintsUsed(event.target.value)}
+                      className="w-full rounded-lg border border-white/10 bg-[#111111] px-3 py-2 text-sm text-white outline-none focus:border-indigo-400"
+                    />
+                  </label>
+                </div>
+
+                <label className="mb-4 grid gap-2 text-xs font-medium text-zinc-300">
+                  Notes
+                  <textarea
+                    value={notes}
+                    onChange={(event) => setNotes(event.target.value)}
+                    rows={3}
+                    placeholder="What did you learn or get stuck on?"
+                    className="w-full resize-none rounded-lg border border-white/10 bg-[#111111] px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-indigo-400"
+                  />
+                </label>
 
                 <div className="grid grid-cols-2 gap-2">
                   <button

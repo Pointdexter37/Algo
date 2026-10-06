@@ -18,6 +18,7 @@ function buildProblemsQuery(params: {
   status?: string
   sort?: string
   topic?: string
+  page?: number
 }) {
   const searchParams = new URLSearchParams()
 
@@ -27,6 +28,7 @@ function buildProblemsQuery(params: {
   if (params.status) searchParams.set("status", params.status)
   if (params.sort) searchParams.set("sort", params.sort)
   if (params.topic) searchParams.set("topic", params.topic)
+  if (params.page && params.page > 1) searchParams.set("page", String(params.page))
 
   const query = searchParams.toString()
   return query ? `/problems?${query}` : "/problems"
@@ -134,6 +136,7 @@ export default async function ProblemsPage({
     status?: string | string[]
     sort?: string | string[]
     topic?: string | string[]
+    page?: string | string[]
   }>
 }) {
   const session = await getServerSession(authOptions)
@@ -146,6 +149,10 @@ export default async function ProblemsPage({
   const rawStatus = typeof params.status === "string" ? params.status : ""
   const rawSort = typeof params.sort === "string" ? params.sort : ""
   const rawTopic = typeof params.topic === "string" ? params.topic : ""
+  const rawPage = typeof params.page === "string" ? params.page : ""
+  const pageSize = 25
+  const requestedPage = Number.parseInt(rawPage, 10)
+  const currentPage = Number.isInteger(requestedPage) && requestedPage > 0 ? requestedPage : 1
   const normalizedQuery = rawQuery.trim().toLowerCase()
   const selectedDifficulty =
     rawDifficulty === "Easy" || rawDifficulty === "Medium" || rawDifficulty === "Hard"
@@ -300,7 +307,7 @@ export default async function ProblemsPage({
   ).sort((a, b) => a.localeCompare(b))
   const selectedTopic = availableTopics.find((topic) => topic === rawTopic) ?? ""
 
-  const filteredProblems = visibleProblems
+  const sortedProblems = visibleProblems
     .filter((problem) => {
       const matchesQuery =
         normalizedQuery.length === 0 ||
@@ -359,6 +366,10 @@ export default async function ProblemsPage({
 
       return a.leetcodeId - b.leetcodeId
     })
+
+  const totalPages = Math.max(1, Math.ceil(sortedProblems.length / pageSize))
+  const safePage = Math.min(currentPage, totalPages)
+  const filteredProblems = sortedProblems.slice((safePage - 1) * pageSize, safePage * pageSize)
 
   return (
     <div className="app-shell p-6 font-sans text-zinc-300 sm:p-8">
@@ -512,7 +523,8 @@ export default async function ProblemsPage({
         </div>
 
         <p className="text-sm text-zinc-400">
-          Showing {filteredProblems.length} of {visibleProblems.length} problems
+          Showing {filteredProblems.length ? (safePage - 1) * pageSize + 1 : 0}-
+          {Math.min(safePage * pageSize, sortedProblems.length)} of {sortedProblems.length} matching problems
           {selectedTrack ? ` in ${CURATED_TRACKS.find((track) => track.slug === selectedTrack)?.title}` : ""}.
         </p>
 
@@ -726,13 +738,19 @@ export default async function ProblemsPage({
                       />
                     </td>
                     <td className="px-6 py-4">
-                      <Link 
-                        href={problem.url}
-                        target="_blank"
-                        rel="noopener noreferrer" 
+                      <Link
+                        href={`/problems/${problem.id}`}
                         className="text-base font-medium text-zinc-200 transition-colors hover:text-[#d7ff4f]"
                       >
                         {problem.leetcodeId}. {problem.title}
+                      </Link>
+                      <Link
+                        href={problem.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-3 text-xs text-zinc-500 hover:text-[#d7ff4f]"
+                      >
+                        Open source
                       </Link>
                       {problem.isPremium && (
                         <span className="ml-3 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
@@ -779,6 +797,48 @@ export default async function ProblemsPage({
               </tbody>
             </table>
           </div>
+
+          {totalPages > 1 && (
+            <nav className="flex flex-wrap items-center justify-between gap-3" aria-label="Problem pages">
+              <p className="text-sm text-zinc-500">
+                Page {safePage} of {totalPages}
+              </p>
+              <div className="flex gap-2">
+                {safePage > 1 ? (
+                  <Link
+                    href={buildProblemsQuery({
+                      q: rawQuery || undefined,
+                      difficulty: selectedDifficulty || undefined,
+                      track: selectedTrack || undefined,
+                      status: selectedStatus !== "all" ? selectedStatus : undefined,
+                      sort: selectedSort !== (userId ? "recommended" : "leetcode-asc") ? selectedSort : undefined,
+                      topic: selectedTopic || undefined,
+                      page: safePage - 1,
+                    })}
+                    className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-zinc-200 hover:bg-white/10"
+                  >
+                    Previous
+                  </Link>
+                ) : null}
+                {safePage < totalPages ? (
+                  <Link
+                    href={buildProblemsQuery({
+                      q: rawQuery || undefined,
+                      difficulty: selectedDifficulty || undefined,
+                      track: selectedTrack || undefined,
+                      status: selectedStatus !== "all" ? selectedStatus : undefined,
+                      sort: selectedSort !== (userId ? "recommended" : "leetcode-asc") ? selectedSort : undefined,
+                      topic: selectedTopic || undefined,
+                      page: safePage + 1,
+                    })}
+                    className="accent-button rounded-lg px-4 py-2 text-sm font-bold"
+                  >
+                    Next
+                  </Link>
+                ) : null}
+              </div>
+            </nav>
+          )}
         </div>
       </div>
     </div>

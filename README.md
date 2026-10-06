@@ -20,6 +20,7 @@ Instead of browsing a huge problem catalog manually, AlgoPilot focuses on curate
 - `/problems` curated problem library
 - `/dashboard` study summary and recommendations
 - `/reviews` due and upcoming review queue
+- `/session` guided daily study session
 - `/roadmap` roadmap selection and study-track overview
 - `/onboarding` initial preference setup
 - `/profile` user summary and progress view
@@ -102,7 +103,8 @@ The app stores:
 3. You browse curated problems in the library.
 4. When you solve a problem, you record how hard it felt and how long it took.
 5. AlgoPilot schedules the next review based on your input.
-6. The dashboard and reviews page help you decide what to do next.
+6. The guided daily session combines due reviews with the next unsolved roadmap problems.
+7. The dashboard and reviews page help you decide what to do next.
 
 ## Deployment
 

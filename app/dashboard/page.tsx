@@ -73,8 +73,10 @@ export default async function DashboardPage() {
   }
 
   const userId = session.user.id
+  const weekStart = new Date()
+  weekStart.setDate(weekStart.getDate() - 7)
 
-  const [preferences, progress, submissions] = await Promise.all([
+  const [preferences, progress, submissions, weeklySubmissions] = await Promise.all([
     prisma.userPreference.findUnique({ where: { userId } }),
     prisma.userProgress.findMany({
       where: { userId },
@@ -109,6 +111,14 @@ export default async function DashboardPage() {
       },
       orderBy: { submittedAt: "desc" },
       take: 5,
+    }),
+    prisma.submission.count({
+      where: {
+        userId,
+        submittedAt: {
+          gte: weekStart,
+        },
+      },
     }),
   ])
 
@@ -165,6 +175,10 @@ export default async function DashboardPage() {
   const streak = getCurrentStreak(submissions.map((item) => item.submittedAt))
   const hasActivityToday = completedToday.size > 0
   const dailyGoal = Math.max(1, preferences?.dailyGoal ?? 3)
+  const weeklyGoal = dailyGoal * 7
+  const weeklyProgressPercent = Math.min(100, Math.round((weeklySubmissions / weeklyGoal) * 100))
+  const nextMilestone =
+    solvedCount < 10 ? 10 : solvedCount < 25 ? 25 : solvedCount < 50 ? 50 : solvedCount < 100 ? 100 : solvedCount + 25
   const dailyGoalCompleted = Array.from(completedToday).filter((problemId) =>
     planProblemIds.has(problemId),
   ).length
@@ -332,6 +346,36 @@ export default async function DashboardPage() {
           </div>
         </section>
 
+        <section className="grid gap-4 md:grid-cols-2">
+          <div className="app-surface rounded-2xl p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+              Weekly momentum
+            </p>
+            <div className="mt-4 flex items-end justify-between gap-3">
+              <p className="text-3xl font-bold text-white">{weeklySubmissions} / {weeklyGoal}</p>
+              <p className="text-sm text-zinc-400">{weeklyProgressPercent}%</p>
+            </div>
+            <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/5">
+              <div className="h-full rounded-full bg-[#d7ff4f]" style={{ width: `${weeklyProgressPercent}%` }} />
+            </div>
+            <p className="mt-3 text-sm text-zinc-400">
+              {weeklySubmissions >= weeklyGoal
+                ? "Weekly goal complete. Keep the streak going with a review."
+                : `${weeklyGoal - weeklySubmissions} more solve${weeklyGoal - weeklySubmissions === 1 ? "" : "s"} to reach this week's goal.`}
+            </p>
+          </div>
+
+          <div className="app-surface rounded-2xl p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+              Next milestone
+            </p>
+            <p className="mt-3 text-3xl font-bold text-white">{nextMilestone} problems</p>
+            <p className="mt-2 text-sm text-zinc-400">
+              {Math.max(0, nextMilestone - solvedCount)} more tracked solve{nextMilestone - solvedCount === 1 ? "" : "s"} to reach your next milestone.
+            </p>
+          </div>
+        </section>
+
         <section className="app-surface rounded-2xl p-5">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
             Reminder settings
@@ -464,6 +508,12 @@ export default async function DashboardPage() {
             className="inline-flex items-center rounded-lg border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/10"
           >
             Edit study goals
+          </Link>
+          <Link
+            href="/session"
+            className="accent-button inline-flex items-center rounded-lg px-5 py-3 text-sm font-bold transition-colors"
+          >
+            Start daily session
           </Link>
         </div>
       </div>

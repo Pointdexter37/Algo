@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -52,59 +52,61 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
-  password      String?   // Added for Email/Password auth
+  password      String? // Added for Email/Password auth
 
   // Relationships
-  accounts      Account[]
-  sessions      Session[]
-  submissions   Submission[]
-  progress      UserProgress[]
-  preferences   UserPreference?
+  accounts       Account[]
+  sessions       Session[]
+  submissions    Submission[]
+  reviewAttempts ReviewAttempt[]
+  progress       UserProgress[]
+  preferences    UserPreference?
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Problem {
-  id          String   @id @default(cuid())
-  leetcodeId  Int      @unique
-  title       String
-  difficulty  String   // "Easy", "Medium", "Hard"
-  topicTags   String   // Stored as comma-separated values or JSON
-  url         String
-  isPremium   Boolean  @default(false)
+  id         String  @id @default(cuid())
+  leetcodeId Int     @unique
+  title      String
+  difficulty String // "Easy", "Medium", "Hard"
+  topicTags  String // Stored as comma-separated values or JSON
+  url        String
+  isPremium  Boolean @default(false)
 
   // Relationships
-  submissions Submission[]
-  progress    UserProgress[]
+  submissions           Submission[]
+  reviewAttempts        ReviewAttempt[]
+  progress              UserProgress[]
   studyTrackMemberships StudyTrackProblem[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model StudyTrack {
-  id          String   @id @default(cuid())
-  slug        String   @unique
+  id          String  @id @default(cuid())
+  slug        String  @unique
   title       String
   description String?
-  sortOrder   Int      @default(0)
-  isActive    Boolean  @default(true)
+  sortOrder   Int     @default(0)
+  isActive    Boolean @default(true)
 
-  problems    StudyTrackProblem[]
+  problems StudyTrackProblem[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model StudyTrackProblem {
-  id        String    @id @default(cuid())
+  id        String @id @default(cuid())
   trackId   String
   problemId String
   position  Int?
 
-  track     StudyTrack @relation(fields: [trackId], references: [id], onDelete: Cascade)
-  problem   Problem    @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  track   StudyTrack @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  problem Problem    @relation(fields: [problemId], references: [id], onDelete: Cascade)
 
   @@unique([trackId, problemId])
   @@index([trackId])
@@ -115,47 +117,67 @@ model Submission {
   id          String   @id @default(cuid())
   userId      String
   problemId   String
-  status      String   // "Accepted", "Wrong Answer", etc.
-  timeSpent   Int?     // Time taken to solve in minutes
+  status      String // "Accepted", "Wrong Answer", etc.
+  timeSpent   Int? // Time taken to solve in minutes
   submittedAt DateTime @default(now())
 
   // Relationships
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  problem     Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
 }
 
-model UserProgress {
+model ReviewAttempt {
   id               String   @id @default(cuid())
   userId           String
   problemId        String
+  rating           Int
+  confidenceBefore Int?
+  confidenceAfter  Int?
+  hintsUsed        Int      @default(0)
+  notes            String?
+  timeSpent        Int?
+  outcome          String   @default("Solved")
+  reviewedAt       DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@index([userId, reviewedAt])
+  @@index([problemId, reviewedAt])
+}
+
+model UserProgress {
+  id        String @id @default(cuid())
+  userId    String
+  problemId String
 
   // Spaced Repetition (SM-2) Fields
-  difficultyRating Int?     // User's rating of how hard it was (e.g., 1-5)
+  difficultyRating Int? // User's rating of how hard it was (e.g., 1-5)
   nextReviewDate   DateTime @default(now())
-  interval         Int      @default(0)   // Days until next review
-  repetitions      Int      @default(0)   // Number of times reviewed
+  interval         Int      @default(0) // Days until next review
+  repetitions      Int      @default(0) // Number of times reviewed
   easeFactor       Float    @default(2.5) // SM-2 ease factor
 
   // Relationships
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  problem          Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
 
   @@unique([userId, problemId])
 }
 
 model UserPreference {
-  id                  String   @id @default(cuid())
-  userId              String   @unique
-  targetRoadmap       String?  // Example: "NeetCode 150" or "Blind 75"
-  dailyGoal           Int      @default(3)
-  preferredDifficulty String?  // Example: "Easy", "Medium", or "Hard"
-  studyReminderEnabled Boolean  @default(false)
-  studyReminderTime   String?  // Example: "20:00"
-  targetInterviewDate DateTime?
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  targetRoadmap        String? // Example: "NeetCode 150" or "Blind 75"
+  dailyGoal            Int       @default(3)
+  preferredDifficulty  String? // Example: "Easy", "Medium", or "Hard"
+  studyReminderEnabled Boolean   @default(false)
+  studyReminderTime    String? // Example: "20:00"
+  targetInterviewDate  DateTime?
 
   // Relationship
-  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

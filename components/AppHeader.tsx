@@ -24,15 +24,15 @@ export default function AppHeader({ session }: { session: Session | null }) {
     { href: "/dashboard", label: "Dashboard" },
     { href: "/problems", label: "Problems" },
     { href: "/reviews", label: "Reviews" },
+    { href: "/analytics", label: "Analytics" },
     { href: "/roadmap", label: "Roadmap" },
     { href: "/profile", label: "Profile" },
   ]
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#060606]/85 backdrop-blur-xl">
-      <div className="mx-auto max-w-6xl px-4 py-3 sm:px-6">
-        <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-[#111110]/90 px-4 py-3 shadow-2xl shadow-black/35 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center justify-between gap-3">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#060606]/90 backdrop-blur-xl md:fixed md:inset-y-0 md:left-0 md:w-64 md:border-b-0 md:border-r">
+      <div className="flex h-full flex-col px-4 py-4">
+        <div className="flex items-center justify-between gap-3">
             <Link href="/" className="flex items-center gap-3">
               <span className="grid h-10 w-10 place-items-center rounded-xl border border-[#d7ff4f]/30 bg-[#d7ff4f] font-mono text-xs font-black tracking-[-0.15em] text-[#111408] shadow-[0_0_24px_rgba(215,255,79,0.14)]">
                 AP
@@ -43,27 +43,16 @@ export default function AppHeader({ session }: { session: Session | null }) {
               </div>
             </Link>
 
-            <div className="flex items-center gap-2 lg:hidden">
-              <span
-                className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${
-                  user
-                    ? "border-[#d7ff4f]/20 bg-[#d7ff4f]/10 text-[#e4ff93]"
-                    : "border-white/10 bg-white/5 text-zinc-300"
-                }`}
-              >
-                {user ? "Signed in" : "Signed out"}
-              </span>
-            </div>
           </div>
 
-          <nav className="flex flex-wrap gap-2">
+          <nav className="mt-8 grid gap-2">
             {navItems.map((item) => {
               const active = pathname === item.href
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`inline-flex items-center rounded-full border px-3 py-2 text-sm font-medium transition-colors ${
+                  className={`inline-flex items-center rounded-xl border px-3 py-2.5 text-sm font-medium transition-colors ${
                     active
                       ? "border-[#d7ff4f]/30 bg-[#d7ff4f]/10 text-[#e4ff93] shadow-[0_0_0_1px_rgba(215,255,79,0.05)]"
                       : "border-white/10 bg-white/[0.03] text-zinc-300 hover:border-white/20 hover:bg-white/8 hover:text-white"
@@ -75,8 +64,8 @@ export default function AppHeader({ session }: { session: Session | null }) {
             })}
           </nav>
 
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-            <div className="hidden items-center gap-2 lg:flex">
+          <div className="mt-auto flex flex-col gap-3">
+            <div className="flex items-center gap-2">
               <span
                 className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium ${
                   user
@@ -95,7 +84,7 @@ export default function AppHeader({ session }: { session: Session | null }) {
               )}
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <a
                 href={SOURCE_URL}
                 target="_blank"
@@ -114,7 +103,7 @@ export default function AppHeader({ session }: { session: Session | null }) {
                     <div className="grid h-9 w-9 place-items-center rounded-full bg-[#d7ff4f] text-xs font-bold text-[#111408] shadow-lg shadow-[#d7ff4f]/10">
                       {initials}
                     </div>
-                    <div className="hidden text-left sm:block">
+                    <div className="hidden min-w-0 text-left lg:block">
                       <p className="text-sm font-medium text-white">{user.name ?? "Your profile"}</p>
                       <p className="text-xs text-zinc-400">{user.email ?? "Signed in"}</p>
                     </div>
@@ -140,7 +129,6 @@ export default function AppHeader({ session }: { session: Session | null }) {
             </div>
           </div>
         </div>
-      </div>
     </header>
   )
 }
