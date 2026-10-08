@@ -184,27 +184,40 @@ export default async function ProblemsPage({
     take: 250
   })
 
-  const trackProblemIds = new Set<string>()
+  const roadmapPositionByProblemId = new Map<string, number>()
+  let visibleProblems = problems
   if (selectedTrack) {
     const track = await prisma.studyTrack.findUnique({
       where: { slug: selectedTrack },
       select: {
         problems: {
+          orderBy: { position: "asc" },
           select: {
-            problemId: true,
+            position: true,
+            problem: {
+              select: {
+                id: true,
+                leetcodeId: true,
+                title: true,
+                difficulty: true,
+                topicTags: true,
+                url: true,
+                isPremium: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            },
           },
         },
       },
     })
 
-    track?.problems.forEach((membership) => {
-      trackProblemIds.add(membership.problemId)
-    })
+    visibleProblems =
+      track?.problems.map((membership) => {
+        roadmapPositionByProblemId.set(membership.problem.id, membership.position ?? Number.MAX_SAFE_INTEGER)
+        return membership.problem
+      }) ?? []
   }
-
-  const visibleProblems = selectedTrack
-    ? problems.filter((problem) => trackProblemIds.has(problem.id))
-    : problems
 
   // Fetch solved problem IDs for the current user
   const solvedProblemIds = new Set<string>()
@@ -251,12 +264,9 @@ export default async function ProblemsPage({
       const dueProblems = visibleProblems
         .filter((problem) => dueProblemIds.has(problem.id))
         .sort((a, b) => {
-          const scoreDiff = getProblemTopicScore(b, topicWeakness) - getProblemTopicScore(a, topicWeakness)
-          if (scoreDiff !== 0) return scoreDiff
-          const leftDate = a.updatedAt.getTime()
-          const rightDate = b.updatedAt.getTime()
-          if (leftDate !== rightDate) return leftDate - rightDate
-          return a.leetcodeId - b.leetcodeId
+          const leftPosition = roadmapPositionByProblemId.get(a.id) ?? Number.MAX_SAFE_INTEGER
+          const rightPosition = roadmapPositionByProblemId.get(b.id) ?? Number.MAX_SAFE_INTEGER
+          return leftPosition - rightPosition || a.leetcodeId - b.leetcodeId
         })
 
       if (dueProblems.length > 0) {
@@ -270,8 +280,9 @@ export default async function ProblemsPage({
       const nextProblems = visibleProblems
         .filter((problem) => !solvedProblemIds.has(problem.id))
         .sort((a, b) => {
-          const scoreDiff = getProblemTopicScore(b, topicWeakness) - getProblemTopicScore(a, topicWeakness)
-          if (scoreDiff !== 0) return scoreDiff
+          const leftPosition = roadmapPositionByProblemId.get(a.id) ?? Number.MAX_SAFE_INTEGER
+          const rightPosition = roadmapPositionByProblemId.get(b.id) ?? Number.MAX_SAFE_INTEGER
+          if (leftPosition !== rightPosition) return leftPosition - rightPosition
           const difficultyDiff = getDifficultyRank(a.difficulty) - getDifficultyRank(b.difficulty)
           if (difficultyDiff !== 0) return difficultyDiff
           return a.leetcodeId - b.leetcodeId
@@ -281,7 +292,9 @@ export default async function ProblemsPage({
         return {
           problem: nextProblems[0],
           title: "Recommended next",
-          description: "You have no reviews due right now, so this is the best unsolved problem to tackle next.",
+          description: selectedTrack
+            ? "You have no reviews due right now, so this is the next unsolved problem in your selected roadmap sequence."
+            : "You have no reviews due right now, so this is the next unsolved problem in the practice library.",
         }
       }
 
@@ -339,6 +352,10 @@ export default async function ProblemsPage({
         const leftSolved = solvedProblemIds.has(a.id) ? 1 : 0
         const rightSolved = solvedProblemIds.has(b.id) ? 1 : 0
         if (leftSolved !== rightSolved) return leftSolved - rightSolved
+
+        const leftPosition = roadmapPositionByProblemId.get(a.id) ?? Number.MAX_SAFE_INTEGER
+        const rightPosition = roadmapPositionByProblemId.get(b.id) ?? Number.MAX_SAFE_INTEGER
+        if (selectedTrack && leftPosition !== rightPosition) return leftPosition - rightPosition
 
         const scoreDiff = getProblemTopicScore(b, topicWeakness) - getProblemTopicScore(a, topicWeakness)
         if (scoreDiff !== 0) return scoreDiff

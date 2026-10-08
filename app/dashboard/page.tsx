@@ -138,6 +138,7 @@ export default async function DashboardPage() {
         where: { slug: trackSlug },
         select: {
           problems: {
+            orderBy: { position: "asc" },
             select: {
               problem: {
                 select: {
