@@ -6,6 +6,10 @@ export type CuratedTrackSeed = {
   problemTitles: string[]
 }
 
+function uniqueProblemTitles(titles: readonly string[]) {
+  return Array.from(new Map(titles.map((title) => [normalizeProblemTitle(title), title])).values())
+}
+
 const BLIND_75_TITLES = [
   "Two Sum",
   "Best Time to Buy and Sell Stock",
@@ -131,7 +135,7 @@ const NEETCODE_250_EXTRA_TITLES = [
   "Burst Balloons",
   "Perfect Squares",
   "Coin Change II",
-  "Can Partition K Subsets",
+  "Partition to K Equal Sum Subsets",
   "Longest Repeating Character Replacement",
   "Minimum Window Substring",
   "Sliding Window Maximum",
@@ -249,35 +253,39 @@ export const CURATED_TRACKS: CuratedTrackSeed[] = [
     title: "Blind 75",
     description: "The highest-signal starter list for interview prep.",
     sortOrder: 0,
-    problemTitles: [...BLIND_75_TITLES],
+    problemTitles: uniqueProblemTitles(BLIND_75_TITLES),
   },
   {
     slug: "neetcode-150",
     title: "NeetCode 150",
     description: "A broader practice path that expands on Blind 75.",
     sortOrder: 1,
-    problemTitles: [...BLIND_75_TITLES, ...NEETCODE_150_EXTRA_TITLES],
+    problemTitles: uniqueProblemTitles([...BLIND_75_TITLES, ...NEETCODE_150_EXTRA_TITLES]),
   },
   {
     slug: "neetcode-250",
     title: "NeetCode 250",
     description: "A deeper interview set that covers more patterns and edge cases.",
     sortOrder: 2,
-    problemTitles: [...BLIND_75_TITLES, ...NEETCODE_150_EXTRA_TITLES, ...NEETCODE_250_EXTRA_TITLES],
+    problemTitles: uniqueProblemTitles([
+      ...BLIND_75_TITLES,
+      ...NEETCODE_150_EXTRA_TITLES,
+      ...NEETCODE_250_EXTRA_TITLES,
+    ]),
   },
   {
     slug: "striver-a-to-z",
     title: "Striver A to Z",
     description: "A structured problem path that moves from basics to advanced patterns.",
     sortOrder: 3,
-    problemTitles: [...STRIVER_A_TO_Z_TITLES],
+    problemTitles: uniqueProblemTitles(STRIVER_A_TO_Z_TITLES),
   },
   {
     slug: "sde-sheet",
     title: "SDE Sheet",
     description: "A compact revision sheet built around high-frequency interview problems.",
     sortOrder: 4,
-    problemTitles: [...SDE_SHEET_TITLES],
+    problemTitles: uniqueProblemTitles(SDE_SHEET_TITLES),
   },
 ]
 
