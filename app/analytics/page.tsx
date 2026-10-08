@@ -108,7 +108,7 @@ export default async function AnalyticsPage() {
             ["Average time", `${averageMinutes}m`, "per recorded solve"],
             ["Review retention", `${retention}%`, "ratings of Good or Easy"],
           ].map(([label, value, detail]) => (
-            <div key={label} className="app-surface rounded-2xl p-5">
+            <div key={label} className="app-surface rounded-2xl p-5 transition-transform hover:-translate-y-0.5">
               <p className="eyebrow">{label}</p>
               <p className="mt-3 text-3xl font-bold text-white">{value}</p>
               <p className="mt-2 text-sm text-zinc-400">{detail}</p>
@@ -131,7 +131,11 @@ export default async function AnalyticsPage() {
                 return (
                   <div key={item.date.toISOString()} className="space-y-2 text-center">
                     <div className="flex h-32 items-end justify-center rounded-lg bg-white/[0.03]">
-                      <div className="w-full rounded-lg bg-[#d7ff4f]" style={{ height: `${height}%` }} />
+                      <div
+                        className="w-full rounded-lg bg-gradient-to-t from-[#d7ff4f] to-[#a7ffb4] shadow-[0_0_18px_rgba(215,255,79,0.22)]"
+                        style={{ height: `${height}%` }}
+                        title={`${item.count} solve${item.count === 1 ? "" : "s"} on ${getDateLabel(item.date)}`}
+                      />
                     </div>
                     <p className="text-[11px] text-zinc-500">{getDateLabel(item.date)}</p>
                     <p className="text-xs font-medium text-zinc-300">{item.count}</p>
@@ -185,7 +189,7 @@ export default async function AnalyticsPage() {
                       <span className="text-zinc-500">{count}</span>
                     </div>
                     <div className="h-2 rounded-full bg-white/5">
-                      <div className="h-2 rounded-full bg-indigo-400" style={{ width: `${width}%` }} />
+                      <div className="h-2 rounded-full bg-[#d7ff4f]" style={{ width: `${width}%` }} />
                     </div>
                   </div>
                 )

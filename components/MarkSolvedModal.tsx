@@ -18,6 +18,7 @@ export default function MarkSolvedModal({ problemId, isSolved = false, isDue = f
   const [confidenceAfter, setConfidenceAfter] = useState("4")
   const [hintsUsed, setHintsUsed] = useState("0")
   const [notes, setNotes] = useState("")
+  const [errorMessage, setErrorMessage] = useState("")
   const modalRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -59,10 +60,10 @@ export default function MarkSolvedModal({ problemId, isSolved = false, isDue = f
         setConfidenceAfter("4")
         setHintsUsed("0")
         setNotes("")
-        alert(isDue ? "Review recorded!" : "Awesome! Problem marked as solved.")
+        setErrorMessage("")
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : "Failed to save."
-        alert(message)
+        setErrorMessage(message)
       }
     })
   }
@@ -88,7 +89,7 @@ export default function MarkSolvedModal({ problemId, isSolved = false, isDue = f
         className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition-all ${
           isDue
             ? "bg-rose-500/20 text-rose-300 border-rose-500/30 hover:bg-rose-500/30 hover:border-rose-500/40"
-            : "bg-white/5 text-zinc-300 border-white/10 hover:bg-indigo-500/20 hover:text-indigo-300 hover:border-indigo-500/30"
+            : "bg-white/5 text-zinc-300 border-white/10 hover:bg-[#d7ff4f]/10 hover:text-[#e4ff93] hover:border-[#d7ff4f]/30"
         }`}
       >
         {isPending ? "Saving..." : isDue ? "Review Due" : "Mark Solved"}
@@ -101,13 +102,16 @@ export default function MarkSolvedModal({ problemId, isSolved = false, isDue = f
               onClick={() => setIsOpen(false)}
             >
               <div
-                className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#1a1a1a] p-5 shadow-2xl animate-in fade-in zoom-in-95"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={`review-title-${problemId}`}
+                className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#151514] p-5 shadow-2xl animate-in fade-in zoom-in-95"
                 onClick={(event) => event.stopPropagation()}
                 ref={modalRef}
               >
                 <div className="mb-4 flex items-start justify-between gap-4">
                   <div>
-                    <h3 className="text-sm font-semibold text-zinc-200">How hard was this?</h3>
+                    <h3 id={`review-title-${problemId}`} className="text-base font-semibold text-white">Record your attempt</h3>
                     <p className="mt-1 text-xs text-zinc-400">
                       Rate the difficulty to help us schedule your next review.
                     </p>
@@ -131,33 +135,13 @@ export default function MarkSolvedModal({ problemId, isSolved = false, isDue = f
                     min={1}
                     value={timeSpent}
                     onChange={(event) => setTimeSpent(event.target.value)}
-                    className="w-full rounded-lg border border-white/10 bg-[#111111] px-3 py-2 text-sm text-white outline-none focus:border-indigo-400"
+                    className="ui-input"
                   />
                 </div>
 
-                <div className="mb-4 grid gap-3 sm:grid-cols-3">
-                  <label className="grid gap-2 text-xs font-medium text-zinc-300">
-                    Confidence before
-                    <input
-                      type="number"
-                      min={1}
-                      max={5}
-                      value={confidenceBefore}
-                      onChange={(event) => setConfidenceBefore(event.target.value)}
-                      className="w-full rounded-lg border border-white/10 bg-[#111111] px-3 py-2 text-sm text-white outline-none focus:border-indigo-400"
-                    />
-                  </label>
-                  <label className="grid gap-2 text-xs font-medium text-zinc-300">
-                    Confidence after
-                    <input
-                      type="number"
-                      min={1}
-                      max={5}
-                      value={confidenceAfter}
-                      onChange={(event) => setConfidenceAfter(event.target.value)}
-                      className="w-full rounded-lg border border-white/10 bg-[#111111] px-3 py-2 text-sm text-white outline-none focus:border-indigo-400"
-                    />
-                  </label>
+                <div className="mb-4 grid gap-3 sm:grid-cols-2">
+                  <ConfidenceScale label="Confidence before" value={confidenceBefore} onChange={setConfidenceBefore} />
+                  <ConfidenceScale label="Confidence after" value={confidenceAfter} onChange={setConfidenceAfter} />
                   <label className="grid gap-2 text-xs font-medium text-zinc-300">
                     Hints used
                     <input
@@ -166,7 +150,7 @@ export default function MarkSolvedModal({ problemId, isSolved = false, isDue = f
                       max={50}
                       value={hintsUsed}
                       onChange={(event) => setHintsUsed(event.target.value)}
-                      className="w-full rounded-lg border border-white/10 bg-[#111111] px-3 py-2 text-sm text-white outline-none focus:border-indigo-400"
+                      className="ui-input"
                     />
                   </label>
                 </div>
@@ -178,9 +162,15 @@ export default function MarkSolvedModal({ problemId, isSolved = false, isDue = f
                     onChange={(event) => setNotes(event.target.value)}
                     rows={3}
                     placeholder="What did you learn or get stuck on?"
-                    className="w-full resize-none rounded-lg border border-white/10 bg-[#111111] px-3 py-2 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-indigo-400"
+                    className="ui-input resize-none placeholder:text-zinc-600"
                   />
                 </label>
+
+                {errorMessage ? (
+                  <p role="alert" className="mb-4 rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-sm text-rose-200">
+                    {errorMessage}
+                  </p>
+                ) : null}
 
                 <div className="grid grid-cols-2 gap-2">
                   <button
@@ -188,28 +178,28 @@ export default function MarkSolvedModal({ problemId, isSolved = false, isDue = f
                     onClick={() => handleRating(0)}
                     className="rounded bg-rose-500/10 px-2 py-2 text-xs font-medium text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-colors"
                   >
-                    Again (0)
+                    Again <span className="block text-[10px] opacity-70">Review soon</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => handleRating(2)}
                     className="rounded bg-amber-500/10 px-2 py-2 text-xs font-medium text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
                   >
-                    Hard (2)
+                    Hard <span className="block text-[10px] opacity-70">Short interval</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => handleRating(4)}
                     className="rounded bg-emerald-500/10 px-2 py-2 text-xs font-medium text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 transition-colors"
                   >
-                    Good (4)
+                    Good <span className="block text-[10px] opacity-70">Normal interval</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => handleRating(5)}
                     className="rounded bg-cyan-500/10 px-2 py-2 text-xs font-medium text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors"
                   >
-                    Easy (5)
+                    Easy <span className="block text-[10px] opacity-70">Long interval</span>
                   </button>
                 </div>
               </div>
@@ -218,5 +208,39 @@ export default function MarkSolvedModal({ problemId, isSolved = false, isDue = f
           )
         : null}
     </div>
+  )
+}
+
+function ConfidenceScale({
+  label,
+  value,
+  onChange,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+}) {
+  return (
+    <fieldset className="grid gap-2 text-xs font-medium text-zinc-300">
+      <legend>{label}</legend>
+      <div className="grid grid-cols-5 gap-1.5">
+        {[1, 2, 3, 4, 5].map((score) => (
+          <button
+            key={score}
+            type="button"
+            aria-label={`${label}: ${score} out of 5`}
+            aria-pressed={value === String(score)}
+            onClick={() => onChange(String(score))}
+            className={`rounded-lg border px-2 py-2 text-sm transition-colors ${
+              value === String(score)
+                ? "border-[#d7ff4f]/50 bg-[#d7ff4f]/15 text-[#e4ff93]"
+                : "border-white/10 bg-white/[0.03] text-zinc-400 hover:bg-white/[0.08] hover:text-white"
+            }`}
+          >
+            {score}
+          </button>
+        ))}
+      </div>
+    </fieldset>
   )
 }

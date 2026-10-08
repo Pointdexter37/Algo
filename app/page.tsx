@@ -47,7 +47,7 @@ export default function Home() {
           <div className="mt-12 grid max-w-xl grid-cols-3 border-y border-white/10 py-5">
             {[
               ["5", "Curated tracks"],
-              ["250", "Core problems"],
+              ["75 / 150 / 250", "Roadmap options"],
               ["SM-2", "Review engine"],
             ].map(([value, label], index) => (
               <div key={label} className={index ? "border-l border-white/10 pl-4 sm:pl-6" : "pr-4 sm:pr-6"}>
@@ -141,10 +141,14 @@ export default function Home() {
           </div>
 
           <div className="rounded-2xl border border-white/8 bg-[#090909]/60 p-6 shadow-lg animate-rise-in" style={{ animationDelay: "200ms" }}>
-            <h3 className="text-xl font-bold">What learners say</h3>
-            <div className="mt-4 space-y-4">
-              <blockquote className="rounded-lg border border-white/6 p-4 text-sm text-zinc-300">&ldquo;Compact sessions helped me keep patterns fresh between interviews.&rdquo; — S</blockquote>
-              <blockquote className="rounded-lg border border-white/6 p-4 text-sm text-zinc-300">&ldquo;Tracks made it simple to focus on what&apos;s high-impact.&rdquo; — A</blockquote>
+            <h3 className="text-xl font-bold">The study loop</h3>
+            <div className="mt-4 space-y-3">
+              {["Choose a track and follow its order.", "Record time, confidence, and hints.", "Return when spaced review says it matters."].map((item, index) => (
+                <div key={item} className="flex items-start gap-3 rounded-lg border border-white/6 p-4 text-sm text-zinc-300">
+                  <span className="font-mono text-[#d7ff4f]">0{index + 1}</span>
+                  <span>{item}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

@@ -21,12 +21,10 @@ export default async function OnboardingPage() {
     CURATED_TRACKS[0].title
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] px-6 py-12 text-zinc-100">
+    <main className="app-shell min-h-screen px-4 py-10 text-zinc-100 sm:px-6 sm:py-12">
       <div className="mx-auto max-w-3xl space-y-8">
         <section className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-300">
-            Onboarding
-          </p>
+          <p className="eyebrow">Setup</p>
           <h1 className="text-4xl font-extrabold tracking-tight text-white">
             Set your study direction
           </h1>
@@ -38,7 +36,7 @@ export default async function OnboardingPage() {
 
         <form
           action={saveUserPreferences}
-          className="space-y-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6"
+          className="app-surface space-y-6 rounded-2xl p-6 md:p-8"
         >
           <div className="grid gap-2">
             <label htmlFor="targetRoadmap" className="text-sm font-medium text-zinc-200">
@@ -48,7 +46,7 @@ export default async function OnboardingPage() {
               id="targetRoadmap"
               name="targetRoadmap"
               defaultValue={defaultTrack}
-              className="rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-indigo-400"
+              className="ui-input"
             >
               {CURATED_TRACKS.map((track) => (
                 <option key={track.slug} value={track.title}>
@@ -70,7 +68,7 @@ export default async function OnboardingPage() {
                 min={1}
                 max={20}
                 defaultValue={preferences?.dailyGoal ?? 3}
-                className="rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none focus:border-indigo-400"
+                className="ui-input"
               />
             </div>
 
@@ -82,7 +80,7 @@ export default async function OnboardingPage() {
                 id="preferredDifficulty"
                 name="preferredDifficulty"
                 defaultValue={preferences?.preferredDifficulty ?? "Medium"}
-                className="rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none focus:border-indigo-400"
+                className="ui-input"
               >
                 <option value="Easy">Easy</option>
                 <option value="Medium">Medium</option>
@@ -97,7 +95,7 @@ export default async function OnboardingPage() {
                 type="checkbox"
                 name="studyReminderEnabled"
                 defaultChecked={preferences?.studyReminderEnabled ?? false}
-                className="mt-1 h-4 w-4 rounded border-white/20 bg-[#111111] text-indigo-500"
+                className="mt-1 h-4 w-4 rounded border-white/20 bg-[#111111] accent-[#d7ff4f]"
               />
               <span className="space-y-1">
                 <span className="block text-sm font-medium text-zinc-100">
@@ -118,7 +116,7 @@ export default async function OnboardingPage() {
                 name="studyReminderTime"
                 type="time"
                 defaultValue={preferences?.studyReminderTime ?? "20:00"}
-                className="rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none focus:border-indigo-400"
+                className="ui-input"
               />
             </div>
           </div>
@@ -136,13 +134,13 @@ export default async function OnboardingPage() {
                   ? preferences.targetInterviewDate.toISOString().slice(0, 10)
                   : ""
               }
-              className="rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none focus:border-indigo-400"
+              className="ui-input"
             />
           </div>
 
           <button
             type="submit"
-            className="inline-flex items-center rounded-lg bg-indigo-500 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-indigo-400"
+            className="ui-primary-button"
           >
             Save preferences
           </button>

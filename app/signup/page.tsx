@@ -3,13 +3,11 @@ import { registerUser } from "@/app/actions/auth"
 
 export default function SignupPage() {
   return (
-    <main className="min-h-screen bg-[#0a0a0a] px-6 py-12 text-zinc-100">
+    <main className="app-shell min-h-screen px-4 py-10 text-zinc-100 sm:px-6 sm:py-12">
       <div className="mx-auto flex min-h-screen max-w-4xl items-center">
         <div className="grid w-full gap-8 rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:grid-cols-[1.1fr_0.9fr] md:p-8">
           <section className="space-y-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-300">
-              Create account
-            </p>
+            <p className="eyebrow">Create account</p>
             <h1 className="text-4xl font-extrabold tracking-tight text-white">
               Start your study plan
             </h1>
@@ -34,7 +32,7 @@ export default function SignupPage() {
                 name="name"
                 type="text"
                 placeholder="Your name"
-                className="rounded-lg border border-white/10 bg-[#0a0a0a] px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-indigo-400"
+                className="ui-input placeholder:text-zinc-500"
               />
             </div>
 
@@ -47,7 +45,7 @@ export default function SignupPage() {
                 name="email"
                 type="email"
                 placeholder="you@example.com"
-                className="rounded-lg border border-white/10 bg-[#0a0a0a] px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-indigo-400"
+                className="ui-input placeholder:text-zinc-500"
               />
             </div>
 
@@ -60,7 +58,7 @@ export default function SignupPage() {
                 name="password"
                 type="password"
                 placeholder="At least 8 characters"
-                className="rounded-lg border border-white/10 bg-[#0a0a0a] px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-indigo-400"
+                className="ui-input placeholder:text-zinc-500"
               />
             </div>
 
@@ -73,20 +71,20 @@ export default function SignupPage() {
                 name="confirmPassword"
                 type="password"
                 placeholder="Repeat your password"
-                className="rounded-lg border border-white/10 bg-[#0a0a0a] px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-indigo-400"
+                className="ui-input placeholder:text-zinc-500"
               />
             </div>
 
             <button
               type="submit"
-              className="inline-flex w-full items-center justify-center rounded-lg bg-indigo-500 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-indigo-400"
+              className="ui-primary-button w-full"
             >
               Create account
             </button>
 
             <p className="text-center text-sm text-zinc-400">
               Already have an account?{" "}
-              <Link href="/api/auth/signin" className="text-indigo-300 hover:text-indigo-200">
+              <Link href="/api/auth/signin" className="text-[#e4ff93] hover:text-white">
                 Sign in
               </Link>
             </p>

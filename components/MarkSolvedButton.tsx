@@ -34,7 +34,7 @@ export default function MarkSolvedButton({ problemId, isSolved = false }: MarkSo
       className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition-all ${
         isSolved 
           ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30 cursor-not-allowed" 
-          : "bg-white/5 text-zinc-300 border-white/10 hover:bg-indigo-500/20 hover:text-indigo-300 hover:border-indigo-500/30"
+          : "bg-white/5 text-zinc-300 border-white/10 hover:bg-[#d7ff4f]/10 hover:text-[#e4ff93] hover:border-[#d7ff4f]/30"
       }`}
     >
       {isPending ? "Saving..." : isSolved ? "Solved" : "Mark Solved"}

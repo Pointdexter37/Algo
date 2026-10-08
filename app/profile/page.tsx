@@ -65,12 +65,10 @@ export default async function ProfilePage() {
   const streak = getCurrentStreak(submissions.map((item) => item.submittedAt))
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] px-6 py-12 text-zinc-100">
+    <main className="app-shell min-h-screen px-4 py-10 text-zinc-100 sm:px-6 sm:py-12">
       <div className="mx-auto max-w-5xl space-y-8">
         <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 md:p-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-300">
-            Profile
-          </p>
+          <p className="eyebrow">Profile</p>
           <div className="mt-4 flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
             <div className="space-y-3">
               <h1 className="text-4xl font-extrabold tracking-tight text-white">
@@ -87,7 +85,7 @@ export default async function ProfilePage() {
               </div>
             </div>
 
-            <div className="grid h-24 w-24 place-items-center rounded-3xl bg-gradient-to-br from-indigo-400 to-cyan-400 text-3xl font-black text-zinc-950">
+            <div className="grid h-24 w-24 place-items-center rounded-3xl bg-[#d7ff4f] text-3xl font-black text-[#111408] shadow-[0_0_35px_rgba(215,255,79,0.16)]">
               {(session.user.name ?? session.user.email ?? "U").slice(0, 2).toUpperCase()}
             </div>
           </div>
@@ -143,7 +141,7 @@ export default async function ProfilePage() {
             <div className="mt-4 flex flex-wrap gap-3">
               <Link
                 href="/dashboard"
-                className="inline-flex items-center rounded-lg bg-indigo-500 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-indigo-400"
+                className="ui-primary-button"
               >
                 Open dashboard
               </Link>
