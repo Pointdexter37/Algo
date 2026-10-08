@@ -70,7 +70,7 @@ export default async function ProblemDetailPage({
   return (
     <main className="app-shell min-h-screen px-6 py-12 text-zinc-100 sm:px-8">
       <div className="mx-auto max-w-5xl space-y-8">
-        <Link href="/problems" className="text-sm text-zinc-400 hover:text-white">
+        <Link href="/problems" className="inline-flex items-center gap-2 text-sm text-zinc-400 transition-colors hover:text-[#e4ff93]">
           ← Back to problem library
         </Link>
 
@@ -102,13 +102,13 @@ export default async function ProblemDetailPage({
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Link href={problem.url} target="_blank" rel="noopener noreferrer" className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-zinc-200">
+              <Link href={problem.url} target="_blank" rel="noopener noreferrer" className="ui-primary-button bg-white text-zinc-950 hover:bg-zinc-200">
                 Open on LeetCode
               </Link>
               {session?.user?.id ? (
                 <MarkSolvedModal problemId={problem.id} isSolved={Boolean(progress)} isDue={isDue} />
               ) : (
-                <Link href="/api/auth/signin" className="accent-button rounded-lg px-4 py-2 text-sm font-bold">
+                <Link href="/api/auth/signin" className="ui-primary-button">
                   Sign in to track
                 </Link>
               )}

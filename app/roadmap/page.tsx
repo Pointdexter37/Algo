@@ -94,7 +94,7 @@ export default async function RoadmapPage() {
   )
 
   return (
-    <main className="app-shell px-6 py-12 text-zinc-100">
+    <main className="app-shell min-h-screen px-4 py-10 text-zinc-100 sm:px-6 sm:py-12">
       <div className="mx-auto max-w-5xl space-y-8">
         <section className="space-y-3">
           <p className="eyebrow">Study tracks</p>
@@ -162,7 +162,7 @@ export default async function RoadmapPage() {
                   <div className="mt-auto space-y-3">
                     <div className="flex items-center justify-between text-sm text-zinc-300">
                       <span>{item.total} problems</span>
-                      <span>{item.total === 0 ? "No data" : `${item.completion}% complete`}</span>
+                      <span className="text-[#e4ff93]">{item.total === 0 ? "No data" : `${item.completion}% complete`}</span>
                     </div>
                     {item.sequencePreview.length > 0 ? (
                       <div className="rounded-xl border border-white/8 bg-black/20 p-3">
@@ -192,7 +192,7 @@ export default async function RoadmapPage() {
                         href={`/problems?track=${item.slug}&sort=recommended`}
                         className="inline-flex w-full items-center justify-center rounded-md border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-300 transition-colors hover:bg-emerald-500/20"
                       >
-                        Open ordered sequence
+                        Continue sequence
                       </Link>
                     )}
                   </div>

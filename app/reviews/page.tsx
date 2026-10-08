@@ -123,12 +123,10 @@ export default async function ReviewsPage({
   const upcomingReviews = filteredProgress.filter((item) => item.nextReviewDate > now).slice(0, 8)
 
   return (
-    <main className="min-h-screen bg-[#0a0a0a] px-6 py-12 text-zinc-100">
+    <main className="app-shell min-h-screen px-4 py-10 text-zinc-100 sm:px-6 sm:py-12">
       <div className="mx-auto max-w-6xl space-y-8">
         <section className="space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-indigo-300">
-            Reviews
-          </p>
+          <p className="eyebrow">Reviews</p>
           <h1 className="text-4xl font-extrabold tracking-tight text-white">
             Due and upcoming reviews
           </h1>
@@ -140,7 +138,7 @@ export default async function ReviewsPage({
 
         <form
           method="get"
-          className="grid gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-4 md:grid-cols-2 xl:grid-cols-[repeat(3,minmax(0,0.9fr))_auto_auto] xl:items-end"
+          className="app-surface grid gap-3 rounded-2xl p-4 md:grid-cols-2 xl:grid-cols-[repeat(3,minmax(0,0.9fr))_auto_auto] xl:items-end"
         >
           <div className="space-y-2">
             <label htmlFor="status" className="text-sm font-medium text-zinc-200">
@@ -150,7 +148,7 @@ export default async function ReviewsPage({
               id="status"
               name="status"
               defaultValue={selectedStatus}
-              className="w-full rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none focus:border-indigo-400"
+              className="ui-input"
             >
               <option value="all">All reviews</option>
               <option value="due">Due now</option>
@@ -167,7 +165,7 @@ export default async function ReviewsPage({
               id="difficulty"
               name="difficulty"
               defaultValue={selectedDifficulty}
-              className="w-full rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none focus:border-indigo-400"
+              className="ui-input"
             >
               <option value="">All</option>
               <option value="Easy">Easy</option>
@@ -184,7 +182,7 @@ export default async function ReviewsPage({
               id="track"
               name="track"
               defaultValue={selectedTrack}
-              className="w-full rounded-lg border border-white/10 bg-[#111111] px-4 py-3 text-sm text-white outline-none focus:border-indigo-400"
+              className="ui-input"
             >
               <option value="">All tracks</option>
               {CURATED_TRACKS.map((track) => (
@@ -197,7 +195,7 @@ export default async function ReviewsPage({
 
           <button
             type="submit"
-            className="inline-flex items-center justify-center rounded-lg bg-indigo-500 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-indigo-400"
+            className="ui-primary-button"
           >
             Filter
           </button>
@@ -231,12 +229,12 @@ export default async function ReviewsPage({
             </p>
           </div>
 
-          <div className="rounded-2xl border border-indigo-500/20 bg-indigo-500/10 p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-indigo-200">
+          <div className="rounded-2xl border border-[#d7ff4f]/20 bg-[#d7ff4f]/10 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#e4ff93]">
               Due today
             </p>
             <p className="mt-3 text-3xl font-bold text-white">{dueTodayReviews.length}</p>
-            <p className="mt-2 text-sm text-indigo-50/80">
+            <p className="mt-2 text-sm text-[#f0ffd1]/80">
               Reviews scheduled for today’s calendar date.
             </p>
           </div>
@@ -261,7 +259,7 @@ export default async function ReviewsPage({
             })}
             className={`inline-flex items-center rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
               selectedStatus === "all"
-                ? "border-indigo-400/30 bg-indigo-400/10 text-indigo-200"
+                ? "border-[#d7ff4f]/30 bg-[#d7ff4f]/10 text-[#e4ff93]"
                 : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10"
             }`}
           >
@@ -413,7 +411,7 @@ export default async function ReviewsPage({
         <div className="flex flex-wrap gap-3">
           <Link
             href="/dashboard"
-            className="inline-flex items-center rounded-lg bg-indigo-500 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-indigo-400"
+            className="ui-primary-button"
           >
             Back to dashboard
           </Link>

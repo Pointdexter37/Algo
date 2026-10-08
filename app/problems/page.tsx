@@ -389,7 +389,7 @@ export default async function ProblemsPage({
   const filteredProblems = sortedProblems.slice((safePage - 1) * pageSize, safePage * pageSize)
 
   return (
-    <div className="app-shell p-6 font-sans text-zinc-300 sm:p-8">
+    <div className="app-shell min-h-screen p-4 font-sans text-zinc-300 sm:p-8">
       <div className="max-w-5xl mx-auto space-y-8">
         
         {/* Header Section */}
@@ -403,7 +403,7 @@ export default async function ProblemsPage({
         </header>
 
         <form
-          className="app-surface grid gap-3 rounded-2xl p-4 md:grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,0.8fr))_auto_auto] xl:items-end"
+          className="app-surface sticky top-4 z-20 grid gap-3 rounded-2xl p-4 backdrop-blur-xl md:grid-cols-2 xl:grid-cols-[minmax(0,1.5fr)_repeat(4,minmax(0,0.8fr))_auto_auto] xl:items-end"
           method="get"
         >
           <div className="flex-1 space-y-2">
@@ -415,7 +415,7 @@ export default async function ProblemsPage({
               name="q"
               defaultValue={rawQuery}
               placeholder="Title, topic, or LeetCode number"
-              className="w-full rounded-lg border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-500 focus:border-[#d7ff4f]/60"
+              className="ui-input placeholder:text-zinc-500"
             />
           </div>
 
@@ -427,7 +427,7 @@ export default async function ProblemsPage({
               id="difficulty"
               name="difficulty"
               defaultValue={selectedDifficulty}
-              className="w-full rounded-lg border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none focus:border-[#d7ff4f]/60"
+              className="ui-input"
             >
               <option value="">All</option>
               <option value="Easy">Easy</option>
@@ -444,7 +444,7 @@ export default async function ProblemsPage({
               id="track"
               name="track"
               defaultValue={selectedTrack}
-              className="w-full rounded-lg border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none focus:border-[#d7ff4f]/60"
+              className="ui-input"
             >
               <option value="">All tracks</option>
               {CURATED_TRACKS.map((track) => (
@@ -463,7 +463,7 @@ export default async function ProblemsPage({
               id="status"
               name="status"
               defaultValue={selectedStatus}
-              className="w-full rounded-lg border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none focus:border-[#d7ff4f]/60"
+              className="ui-input"
             >
               <option value="all">All statuses</option>
               <option value="unsolved">Unsolved</option>
@@ -480,7 +480,7 @@ export default async function ProblemsPage({
               id="sort"
               name="sort"
               defaultValue={selectedSort}
-              className="w-full rounded-lg border border-white/10 bg-black/35 px-4 py-3 text-sm text-white outline-none focus:border-[#d7ff4f]/60"
+              className="ui-input"
             >
               <option value="recommended">Recommended</option>
               <option value="leetcode-asc">LeetCode # ascending</option>
@@ -493,14 +493,14 @@ export default async function ProblemsPage({
 
           <button
             type="submit"
-            className="accent-button rounded-lg px-5 py-3 text-sm font-bold transition-colors"
+            className="ui-primary-button"
           >
             Filter
           </button>
 
           <Link
             href="/problems"
-            className="rounded-lg border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium text-zinc-200 transition-colors hover:bg-white/10"
+            className="ui-muted-button"
           >
             Clear
           </Link>
@@ -730,7 +730,7 @@ export default async function ProblemsPage({
         )}
 
         {/* Problems List */}
-        <div className="bg-[#111111] border border-white/5 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-xl">
+        <div className="ui-card overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -745,16 +745,16 @@ export default async function ProblemsPage({
                 {filteredProblems.map((problem) => (
                   <tr 
                     key={problem.id} 
-                    className="group hover:bg-white/[0.02] transition-colors duration-200"
+                    className="group transition-colors duration-200 hover:bg-white/[0.04]"
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-4 sm:px-6">
                       <MarkSolvedModal 
                         problemId={problem.id} 
                         isSolved={solvedProblemIds.has(problem.id)} 
                         isDue={dueProblemIds.has(problem.id)}
                       />
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-4 sm:px-6">
                       <Link
                         href={`/problems/${problem.id}`}
                         className="text-base font-medium text-zinc-200 transition-colors hover:text-[#d7ff4f]"
@@ -775,7 +775,7 @@ export default async function ProblemsPage({
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 py-4 sm:px-6">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium border
                         ${problem.difficulty === 'Easy' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
                           problem.difficulty === 'Medium' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 

@@ -238,7 +238,7 @@ export default async function DashboardPage() {
           </p>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-[1.6fr_1fr_1fr]">
+        <section className="grid gap-4 md:grid-cols-[1.7fr_0.8fr_0.8fr]">
           <div className="app-surface rounded-2xl bg-[linear-gradient(135deg,rgba(215,255,79,0.13),rgba(255,255,255,0.025)_52%,rgba(255,255,255,0.01))] p-5">
             <p className="eyebrow">
               Today’s focus
@@ -262,7 +262,7 @@ export default async function DashboardPage() {
                 {preferences?.preferredDifficulty ?? "Any difficulty"}
               </span>
             </div>
-            <div className="mt-5 rounded-xl border border-white/10 bg-black/20 p-4">
+            <div className="mt-5 rounded-xl border border-[#d7ff4f]/15 bg-black/20 p-4">
               <div className="flex items-center justify-between gap-3 text-sm">
                 <span className="font-medium text-zinc-200">Today’s plan</span>
                 <span className="text-zinc-400">
@@ -281,18 +281,20 @@ export default async function DashboardPage() {
                   : "You have completed every problem in this roadmap."}
               </p>
               {nextPlanProblem ? (
-                <Link
-                  href={`/problems?${planActionQuery}`}
-                  className="mt-3 inline-flex items-center rounded-lg bg-[#d7ff4f] px-4 py-2 text-sm font-bold text-black transition-colors hover:bg-[#e4ff93]"
-                >
-                  Start today’s plan
-                </Link>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Link href="/session" className="ui-primary-button">
+                    Start today&apos;s session
+                  </Link>
+                  <Link href={`/problems?${planActionQuery}`} className="ui-muted-button">
+                    Browse queue
+                  </Link>
+                </div>
               ) : null}
             </div>
           </div>
 
           <div className="app-surface rounded-2xl p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+            <p className="eyebrow">
               Solved
             </p>
             <p className="mt-3 text-3xl font-bold text-white">{solvedCount}</p>
@@ -302,7 +304,7 @@ export default async function DashboardPage() {
           </div>
 
           <div className="app-surface rounded-2xl p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
+            <p className="eyebrow">
               Due now
             </p>
             <p className="mt-3 text-3xl font-bold text-white">{dueCount}</p>
@@ -325,7 +327,7 @@ export default async function DashboardPage() {
         )}
 
         <section className="grid gap-4 md:grid-cols-2">
-          <div className="app-surface rounded-2xl p-5">
+          <div className="app-surface rounded-2xl border-[#d7ff4f]/15 p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
               Study streak
             </p>

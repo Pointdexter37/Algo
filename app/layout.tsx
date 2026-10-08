@@ -33,7 +33,7 @@ export default async function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full md:pl-64">
+      <body className="min-h-full">
         <Providers session={session}>
           <AppHeader session={session} />
           {children}

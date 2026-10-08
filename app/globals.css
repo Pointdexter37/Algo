@@ -71,6 +71,70 @@ body::before {
   border-color: rgba(255, 255, 255, 0.16);
 }
 
+.ui-card {
+  border: 1px solid var(--line);
+  border-radius: 1.25rem;
+  background: rgba(16, 16, 15, 0.78);
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.2);
+}
+
+.ui-input {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: rgba(0, 0, 0, 0.32);
+  padding: 0.75rem 1rem;
+  color: white;
+  outline: none;
+  transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+}
+
+.ui-input:focus {
+  border-color: rgba(215, 255, 79, 0.65);
+  box-shadow: 0 0 0 3px rgba(215, 255, 79, 0.1);
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.ui-muted-button,
+.ui-primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  padding: 0.7rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+
+.ui-muted-button {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.05);
+  color: #e4e4e7;
+}
+
+.ui-muted-button:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.ui-primary-button {
+  background: var(--accent);
+  color: var(--accent-ink);
+  box-shadow: 0 10px 30px rgba(215, 255, 79, 0.13);
+}
+
+.ui-primary-button:hover {
+  background: #e2ff7b;
+  transform: translateY(-1px);
+}
+
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
 .eyebrow {
   color: var(--accent);
   font-size: 0.68rem;

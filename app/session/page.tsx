@@ -74,13 +74,13 @@ export default async function StudySessionPage() {
           </p>
         </section>
 
-        <section className="app-surface rounded-2xl p-5">
+        <section className="app-surface rounded-2xl border-[#d7ff4f]/15 p-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="text-sm font-medium text-zinc-200">{track?.title ?? "Default problem set"}</p>
               <p className="mt-1 text-sm text-zinc-500">{queue.length} of {dailyGoal} planned today</p>
             </div>
-            <Link href="/dashboard" className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-zinc-200 hover:bg-white/10">
+            <Link href="/dashboard" className="ui-muted-button">
               Back to dashboard
             </Link>
           </div>
@@ -91,7 +91,7 @@ export default async function StudySessionPage() {
             const itemProgress = progressByProblem.get(problem.id)
             const isDue = Boolean(itemProgress && itemProgress.nextReviewDate <= now)
             return (
-              <article key={problem.id} className="app-surface flex flex-col gap-4 rounded-2xl p-5 md:flex-row md:items-center md:justify-between">
+              <article key={problem.id} className="app-surface flex flex-col gap-4 rounded-2xl p-5 transition-transform hover:-translate-y-0.5 md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
                     Step {index + 1} · {isDue ? "Review due" : "New problem"}
@@ -100,7 +100,10 @@ export default async function StudySessionPage() {
                   <p className="mt-2 text-sm text-zinc-400">{problem.difficulty} · {problem.topicTags.split(", ").slice(0, 3).join(" · ")}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Link href={problem.url} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10">
+                  <Link href={`/problems/${problem.id}`} className="ui-muted-button">
+                    View details
+                  </Link>
+                  <Link href={problem.url} target="_blank" rel="noopener noreferrer" className="ui-muted-button">
                     Open problem
                   </Link>
                   <MarkSolvedModal problemId={problem.id} isSolved={Boolean(itemProgress)} isDue={isDue} />
