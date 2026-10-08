@@ -86,8 +86,12 @@ async function seedProblems() {
   try {
     const questions: LeetCodeQuestion[] = []
     const seenIds = new Set<string>()
+    const requiredTitles = new Set(
+      CURATED_TRACKS.flatMap((track) => track.problemTitles.map(normalizeProblemTitle)),
+    )
+    const foundRequiredTitles = new Set<string>()
 
-    for (let skip = 0; questions.length < DEFAULT_TARGET_COUNT; skip += DEFAULT_BATCH_SIZE) {
+    for (let skip = 0; ; skip += DEFAULT_BATCH_SIZE) {
       const batch = await fetchLeetCodeProblems(DEFAULT_BATCH_SIZE, skip)
       if (batch.length === 0) {
         break
@@ -100,18 +104,36 @@ async function seedProblems() {
 
         seenIds.add(question.frontendQuestionId)
         questions.push(question)
-
-        if (questions.length >= DEFAULT_TARGET_COUNT) {
-          break
+        if (requiredTitles.has(normalizeProblemTitle(question.title))) {
+          foundRequiredTitles.add(normalizeProblemTitle(question.title))
         }
+      }
+
+      if (questions.length >= DEFAULT_TARGET_COUNT && foundRequiredTitles.size === requiredTitles.size) {
+        break
       }
     }
 
-    console.log(`Successfully fetched ${questions.length} problems. Saving to database...`)
+    console.log(
+      `Successfully fetched ${questions.length} problems, including ${foundRequiredTitles.size}/${requiredTitles.size} curated titles. Saving to database...`,
+    )
+    const missingRequiredTitles = Array.from(requiredTitles).filter(
+      (title) => !foundRequiredTitles.has(title),
+    )
+    if (missingRequiredTitles.length > 0) {
+      throw new Error(
+        `LeetCode did not return ${missingRequiredTitles.length} required curated titles: ${missingRequiredTitles.join(", ")}`,
+      )
+    }
 
     let processedCount = 0
 
-    for (const q of questions) {
+    const questionsToPersist = questions.filter(
+      (question, index) =>
+        index < DEFAULT_TARGET_COUNT || requiredTitles.has(normalizeProblemTitle(question.title)),
+    )
+
+    for (const q of questionsToPersist) {
       const leetcodeId = Number.parseInt(q.frontendQuestionId, 10)
       if (Number.isNaN(leetcodeId)) {
         continue
@@ -153,6 +175,15 @@ async function seedProblems() {
     )
 
     for (const track of CURATED_TRACKS) {
+      const missingTitles = track.problemTitles.filter(
+        (title) => !problemIdByTitle.has(normalizeProblemTitle(title)),
+      )
+      if (missingTitles.length > 0) {
+        throw new Error(
+          `${track.title} is missing ${missingTitles.length} seeded problems: ${missingTitles.join(", ")}`,
+        )
+      }
+
       const trackRecord = await prisma.studyTrack.upsert({
         where: { slug: track.slug },
         update: {
@@ -174,24 +205,18 @@ async function seedProblems() {
         where: { trackId: trackRecord.id },
       })
 
-      const trackProblemIds = Array.from(
-        new Set(
-          track.problemTitles
-            .map((title) => problemIdByTitle.get(normalizeProblemTitle(title)))
-            .filter((problemId): problemId is string => Boolean(problemId)),
-        ),
+      const trackProblemIds = track.problemTitles.map(
+        (title) => problemIdByTitle.get(normalizeProblemTitle(title))!,
       )
 
-      if (trackProblemIds.length > 0) {
-        await prisma.studyTrackProblem.createMany({
-          data: trackProblemIds.map((problemId, position) => ({
-            trackId: trackRecord.id,
-            problemId,
-            position: position + 1,
-          })),
-          skipDuplicates: true,
-        })
-      }
+      await prisma.studyTrackProblem.createMany({
+        data: trackProblemIds.map((problemId, position) => ({
+          trackId: trackRecord.id,
+          problemId,
+          position: position + 1,
+        })),
+        skipDuplicates: true,
+      })
     }
 
     console.log(`✅ Seeding complete! Processed ${processedCount} problems.`)

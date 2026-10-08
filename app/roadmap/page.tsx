@@ -63,7 +63,12 @@ export default async function RoadmapPage() {
         where: { slug: track.slug },
         select: {
           problems: {
-            select: { problemId: true },
+            orderBy: { position: "asc" },
+            select: {
+              problemId: true,
+              position: true,
+              problem: { select: { leetcodeId: true, title: true } },
+            },
           },
         },
       })
@@ -79,6 +84,11 @@ export default async function RoadmapPage() {
         solved,
         due,
         completion,
+        sequencePreview: trackMembership?.problems.slice(0, 5).map((membership) => ({
+          position: membership.position,
+          leetcodeId: membership.problem.leetcodeId,
+          title: membership.problem.title,
+        })) ?? [],
       }
     }),
   )
@@ -154,6 +164,21 @@ export default async function RoadmapPage() {
                       <span>{item.total} problems</span>
                       <span>{item.total === 0 ? "No data" : `${item.completion}% complete`}</span>
                     </div>
+                    {item.sequencePreview.length > 0 ? (
+                      <div className="rounded-xl border border-white/8 bg-black/20 p-3">
+                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                          Sequence starts with
+                        </p>
+                        <ol className="mt-2 space-y-1 text-xs text-zinc-400">
+                          {item.sequencePreview.map((problem) => (
+                            <li key={problem.position}>
+                              <span className="mr-2 text-zinc-600">{problem.position}.</span>
+                              {problem.leetcodeId}. {problem.title}
+                            </li>
+                          ))}
+                        </ol>
+                      </div>
+                    ) : null}
 
                     {!selected ? (
                       <button
@@ -163,9 +188,12 @@ export default async function RoadmapPage() {
                         Select track
                       </button>
                     ) : (
-                      <div className="inline-flex w-full items-center justify-center rounded-md border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-300">
-                        Active roadmap
-                      </div>
+                      <Link
+                        href={`/problems?track=${item.slug}&sort=recommended`}
+                        className="inline-flex w-full items-center justify-center rounded-md border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-300 transition-colors hover:bg-emerald-500/20"
+                      >
+                        Open ordered sequence
+                      </Link>
                     )}
                   </div>
                 </div>

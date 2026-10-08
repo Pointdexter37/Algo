@@ -138,6 +138,7 @@ export default async function DashboardPage() {
         where: { slug: trackSlug },
         select: {
           problems: {
+            orderBy: { position: "asc" },
             select: {
               problem: {
                 select: {
@@ -203,13 +204,16 @@ export default async function DashboardPage() {
       (item) => item.problemId === problem.id && item.nextReviewDate <= now,
     ),
   )
+  const lastSolvedPlanIndex = planProblems.reduce(
+    (lastIndex, problem, index) => (progress.some((item) => item.problemId === problem.id) ? index : lastIndex),
+    -1,
+  )
+  const nextSequentialPlanProblem = planProblems.find(
+    (problem, index) => index > lastSolvedPlanIndex && !progress.some((item) => item.problemId === problem.id),
+  )
   const nextPlanProblem =
     duePlanProblem ??
-    planProblems.find(
-      (problem) =>
-        !progress.some((item) => item.problemId === problem.id) &&
-        (!preferences?.preferredDifficulty || problem.difficulty === preferences.preferredDifficulty),
-    ) ??
+    nextSequentialPlanProblem ??
     planProblems.find((problem) => !progress.some((item) => item.problemId === problem.id)) ??
     null
   const planActionQuery = trackSlug

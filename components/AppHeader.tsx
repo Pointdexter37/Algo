@@ -4,8 +4,23 @@ import Link from "next/link"
 import SignOutButton from "@/components/SignOutButton"
 import type { Session } from "next-auth"
 import { usePathname } from "next/navigation"
+import { useSyncExternalStore } from "react"
 
 const SOURCE_URL = "https://github.com/Pointdexter37/Algo"
+const SIDEBAR_STORAGE_KEY = "algopilot-sidebar"
+
+function subscribeToSidebar(callback: () => void) {
+  window.addEventListener("algopilot-sidebar-change", callback)
+  return () => window.removeEventListener("algopilot-sidebar-change", callback)
+}
+
+function getSidebarSnapshot() {
+  return window.localStorage.getItem(SIDEBAR_STORAGE_KEY) !== "closed"
+}
+
+function getSidebarServerSnapshot() {
+  return true
+}
 
 function getInitials(name?: string | null, email?: string | null) {
   const source = name ?? email ?? "U"
@@ -19,6 +34,16 @@ export default function AppHeader({ session }: { session: Session | null }) {
   const user = session?.user
   const initials = getInitials(user?.name, user?.email)
   const pathname = usePathname()
+  const isOpen = useSyncExternalStore(
+    subscribeToSidebar,
+    getSidebarSnapshot,
+    getSidebarServerSnapshot,
+  )
+
+  const setSidebarOpen = (open: boolean) => {
+    window.localStorage.setItem(SIDEBAR_STORAGE_KEY, open ? "open" : "closed")
+    window.dispatchEvent(new Event("algopilot-sidebar-change"))
+  }
 
   const navItems = [
     { href: "/dashboard", label: "Dashboard" },
@@ -30,9 +55,14 @@ export default function AppHeader({ session }: { session: Session | null }) {
   ]
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#060606]/90 backdrop-blur-xl md:fixed md:inset-y-0 md:left-0 md:w-64 md:border-b-0 md:border-r">
-      <div className="flex h-full flex-col px-4 py-4">
-        <div className="flex items-center justify-between gap-3">
+    <>
+      <header
+        className={`sticky top-0 z-40 border-b border-white/10 bg-[#060606]/95 backdrop-blur-xl transition-transform duration-300 md:fixed md:inset-y-0 md:left-0 md:w-64 md:border-b-0 md:border-r ${
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="flex h-full flex-col px-4 py-4">
+          <div className="flex items-center justify-between gap-3">
             <Link href="/" className="flex items-center gap-3">
               <span className="grid h-10 w-10 place-items-center rounded-xl border border-[#d7ff4f]/30 bg-[#d7ff4f] font-mono text-xs font-black tracking-[-0.15em] text-[#111408] shadow-[0_0_24px_rgba(215,255,79,0.14)]">
                 AP
@@ -42,10 +72,17 @@ export default function AppHeader({ session }: { session: Session | null }) {
                 <p className="text-xs text-zinc-500">Personal coding interview coach</p>
               </div>
             </Link>
-
+            <button
+              type="button"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Close navigation sidebar"
+              className="grid h-9 w-9 place-items-center rounded-lg border border-white/10 bg-white/5 text-zinc-400 transition-colors hover:bg-white/10 hover:text-white"
+            >
+              <CloseIcon />
+            </button>
           </div>
 
-          <nav className="mt-8 grid gap-2">
+          <nav className="mt-8 grid gap-2" aria-label="Primary navigation">
             {navItems.map((item) => {
               const active = pathname === item.href
               return (
@@ -75,13 +112,9 @@ export default function AppHeader({ session }: { session: Session | null }) {
               >
                 {user ? "Signed in" : "Signed out"}
               </span>
-              {user ? (
-                <span className="text-xs text-zinc-500">
-                  {user.email ?? "Authenticated user"}
-                </span>
-              ) : (
-                <span className="text-xs text-zinc-500">Use sign in or sign up</span>
-              )}
+              <span className="truncate text-xs text-zinc-500">
+                {user?.email ?? "Use sign in or sign up"}
+              </span>
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
@@ -92,7 +125,7 @@ export default function AppHeader({ session }: { session: Session | null }) {
                 className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-medium text-zinc-200 transition duration-200 hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/10 hover:text-[#e4ff93]"
               >
                 <GitHubMark />
-                <span className="hidden sm:inline">Source code</span>
+                <span>Source code</span>
               </a>
               {user ? (
                 <>
@@ -103,9 +136,9 @@ export default function AppHeader({ session }: { session: Session | null }) {
                     <div className="grid h-9 w-9 place-items-center rounded-full bg-[#d7ff4f] text-xs font-bold text-[#111408] shadow-lg shadow-[#d7ff4f]/10">
                       {initials}
                     </div>
-                    <div className="hidden min-w-0 text-left lg:block">
-                      <p className="text-sm font-medium text-white">{user.name ?? "Your profile"}</p>
-                      <p className="text-xs text-zinc-400">{user.email ?? "Signed in"}</p>
+                    <div className="min-w-0 text-left">
+                      <p className="truncate text-sm font-medium text-white">{user.name ?? "Your profile"}</p>
+                      <p className="truncate text-xs text-zinc-400">{user.email ?? "Signed in"}</p>
                     </div>
                   </Link>
                   <SignOutButton />
@@ -129,17 +162,41 @@ export default function AppHeader({ session }: { session: Session | null }) {
             </div>
           </div>
         </div>
-    </header>
+      </header>
+
+      <button
+        type="button"
+        onClick={() => setSidebarOpen(true)}
+        aria-label="Open navigation sidebar"
+        className={`fixed left-4 top-4 z-50 grid h-10 w-10 place-items-center rounded-xl border border-[#d7ff4f]/25 bg-[#111110] text-[#e4ff93] shadow-xl shadow-black/30 transition-all duration-300 hover:bg-[#d7ff4f]/10 ${
+          isOpen ? "pointer-events-none opacity-0" : "opacity-100"
+        }`}
+      >
+        <MenuIcon />
+      </button>
+    </>
+  )
+}
+
+function CloseIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-2">
+      <path d="m7 7 10 10M17 7 7 17" />
+    </svg>
+  )
+}
+
+function MenuIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-2">
+      <path d="M4 6h16M4 12h16M4 18h16" />
+    </svg>
   )
 }
 
 function GitHubMark() {
   return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-4 w-4 fill-current text-zinc-200"
-    >
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 fill-current text-zinc-200">
       <path d="M12 2C6.477 2 2 6.64 2 12.376c0 4.59 2.865 8.482 6.84 9.859.5.095.682-.221.682-.492 0-.243-.01-.887-.014-1.74-2.782.617-3.369-1.379-3.369-1.379-.455-1.19-1.11-1.507-1.11-1.507-.908-.64.069-.627.069-.627 1.004.073 1.532 1.064 1.532 1.064.893 1.57 2.344 1.117 2.91.855.091-.663.35-1.116.636-1.373-2.22-.258-4.555-1.141-4.555-5.078 0-1.121.39-2.038 1.03-2.757-.104-.26-.446-1.308.098-2.727 0 0 .84-.276 2.75 1.053a9.17 9.17 0 0 1 2.5-.347 9.17 9.17 0 0 1 2.5.347c1.909-1.329 2.748-1.053 2.748-1.053.545 1.419.202 2.467.099 2.727.64.719 1.028 1.636 1.028 2.757 0 3.947-2.34 4.817-4.566 5.071.359.318.678.947.678 1.91 0 1.378-.012 2.487-.012 2.826 0 .274.18.592.688.491A10.402 10.402 0 0 0 22 12.376C22 6.64 17.523 2 12 2z" />
     </svg>
   )
