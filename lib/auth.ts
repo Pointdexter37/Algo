@@ -6,6 +6,9 @@ import { verifyPassword } from "@/lib/password"
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
+  pages: {
+    signIn: "/signin",
+  },
   session: {
     strategy: "jwt",
   },

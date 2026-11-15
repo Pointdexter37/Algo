@@ -158,7 +158,7 @@ export default function AppHeader({ session }: { session: Session | null }) {
                     Sign up
                   </Link>
                   <Link
-                    href="/api/auth/signin"
+                    href="/signin"
                     className="accent-button inline-flex items-center rounded-lg px-3 py-2 text-sm font-bold transition-colors"
                   >
                     Sign in

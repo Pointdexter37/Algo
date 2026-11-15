@@ -108,7 +108,7 @@ export default async function ProblemDetailPage({
               {session?.user?.id ? (
                 <MarkSolvedModal problemId={problem.id} isSolved={Boolean(progress)} isDue={isDue} />
               ) : (
-                <Link href="/api/auth/signin" className="ui-primary-button">
+                <Link href="/signin" className="ui-primary-button">
                   Sign in to track
                 </Link>
               )}
