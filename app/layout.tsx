@@ -17,8 +17,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AlgoPilot",
-  description: "Personalized coding interview practice with spaced repetition and progress tracking.",
+  metadataBase: new URL("https://algo-olive-one.vercel.app"),
+  title: {
+    default: "AlgoPilot | Remember the patterns you solved",
+    template: "%s | AlgoPilot",
+  },
+  description: "A spaced-review coding interview coach for Indian placement prep.",
+  openGraph: {
+    title: "AlgoPilot | Remember the patterns you solved",
+    description: "Solve curated interview problems, then review them before the pattern fades.",
+    url: "https://algo-olive-one.vercel.app",
+    siteName: "AlgoPilot",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AlgoPilot | Remember the patterns you solved",
+    description: "Spaced-review coding interview practice for placement prep.",
+  },
 };
 
 export default async function RootLayout({

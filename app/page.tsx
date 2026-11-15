@@ -16,16 +16,16 @@ export default function Home() {
         <div className="animate-rise-in">
           <div className="mb-8 inline-flex items-center gap-3 rounded-full border border-[#d7ff4f]/20 bg-[#d7ff4f]/[0.06] px-3 py-2 text-xs font-medium text-[#e4ff93]">
             <span className="animate-pulse-dot h-2 w-2 rounded-full bg-[#d7ff4f]" />
-            Your coding interview practice system
+            For Indian placement and internship prep
           </div>
 
           <h1 className="max-w-3xl text-5xl font-black leading-[0.94] tracking-[-0.06em] text-[#f4f4f0] sm:text-6xl lg:text-7xl">
-            Practice with
-            <span className="block text-[#d7ff4f]">a memory.</span>
+            You solved it once.
+            <span className="block text-[#d7ff4f]">Will you remember it?</span>
           </h1>
           <p className="mt-7 max-w-xl text-base leading-7 text-zinc-400 sm:text-lg">
-            AlgoPilot gives interview prep a structure: curated problems, honest progress
-            signals, and reviews that arrive before you forget the pattern.
+            Solve curated LeetCode-style problems, then get a short review when the pattern
+            is about to fade. Build recall, not just a longer solved count.
           </p>
 
           <div className="mt-9 flex flex-wrap gap-3">
@@ -35,6 +35,12 @@ export default function Home() {
             >
               Start practicing
               <Arrow />
+            </Link>
+            <Link
+              href="/demo"
+              className="inline-flex items-center rounded-xl border border-[#d7ff4f]/20 bg-[#d7ff4f]/[0.06] px-5 py-3 text-sm font-semibold text-[#e4ff93] transition duration-200 hover:-translate-y-0.5 hover:bg-[#d7ff4f]/[0.12]"
+            >
+              See a sample day
             </Link>
             <Link
               href="/roadmap"
@@ -48,7 +54,7 @@ export default function Home() {
             {[
               ["5", "Curated tracks"],
               ["75 / 150 / 250", "Roadmap options"],
-              ["SM-2", "Review engine"],
+              ["Before you forget", "Review timing"],
             ].map(([value, label], index) => (
               <div key={label} className={index ? "border-l border-white/10 pl-4 sm:pl-6" : "pr-4 sm:pr-6"}>
                 <p className="text-2xl font-bold tracking-tight text-white sm:text-3xl">{value}</p>
@@ -98,7 +104,7 @@ export default function Home() {
               <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/8">
                 <div className="h-full w-[62%] rounded-full bg-[#d7ff4f] shadow-[0_0_14px_rgba(215,255,79,0.55)]" />
               </div>
-              <p className="mt-3 text-sm text-zinc-400">Solve, assess, return. Repeat the loop until the patterns stay with you.</p>
+              <p className="mt-3 text-sm text-zinc-400">Solve, assess, return. The queue tells you what deserves attention today.</p>
             </div>
           </div>
 
@@ -120,7 +126,7 @@ export default function Home() {
           {[
             { title: "Curated tracks", desc: "Hand-picked sequences to cover core patterns.", delay: 80 },
             { title: "Honest progress", desc: "Track real solves, time and confidence.", delay: 160 },
-            { title: "Spaced reviews", desc: "SM-2 powered reviews delivered when they matter.", delay: 240 },
+            { title: "Spaced reviews", desc: "Short recall sessions arrive before solved patterns disappear.", delay: 240 },
           ].map((f) => (
             <div key={f.title} className="rounded-2xl border border-white/8 bg-[#0b0b0b]/60 p-6 shadow-md transition-transform hover:scale-[1.02]" style={{ animationDelay: `${f.delay}ms` }}>
               <h3 className="text-lg font-bold text-white">{f.title}</h3>
@@ -139,6 +145,38 @@ export default function Home() {
               <Link href="/problems" className="inline-flex items-center rounded-xl border border-white/12 bg-white/[0.02] px-4 py-2 text-sm font-semibold text-zinc-200">Browse problems</Link>
             </div>
           </div>
+
+          <section className="mt-12 rounded-2xl border border-white/8 bg-[#0b0b0b]/70 p-6">
+            <p className="eyebrow">Why this loop</p>
+            <h2 className="mt-2 text-2xl font-bold text-white">More useful than random grinding</h2>
+            <div className="mt-5 grid gap-3 md:grid-cols-3">
+              {[
+                ["Random LeetCode grinding", "A growing solved count, but no plan for what to revisit."],
+                ["Static sheets", "A good sequence, but they cannot tell you what you personally forgot."],
+                ["AlgoPilot", "A curated path plus a review queue shaped by your own attempts."],
+              ].map(([title, detail], index) => (
+                <div key={title} className={`rounded-xl border p-4 ${index === 2 ? "border-[#d7ff4f]/25 bg-[#d7ff4f]/[0.07]" : "border-white/8 bg-white/[0.02]"}`}>
+                  <h3 className="font-semibold text-white">{title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-zinc-400">{detail}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-12 grid gap-8 rounded-2xl border border-white/8 bg-white/[0.02] p-6 md:grid-cols-[1fr_auto] md:items-center">
+            <div>
+              <p className="eyebrow">Built in public</p>
+              <h2 className="mt-2 text-2xl font-bold text-white">A student-built tool for students</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
+                AlgoPilot is open source and built by a final-year B.Tech CSE student who kept
+                forgetting problems after solving them. No fake testimonials, no inflated user
+                counts—just a tool being improved with real prep sessions.
+              </p>
+            </div>
+            <a href="https://github.com/Pointdexter37/Algo" target="_blank" rel="noreferrer" className="accent-button inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-bold">
+              View the source
+            </a>
+          </section>
 
           <div className="rounded-2xl border border-white/8 bg-[#090909]/60 p-6 shadow-lg animate-rise-in" style={{ animationDelay: "200ms" }}>
             <h3 className="text-xl font-bold">The study loop</h3>

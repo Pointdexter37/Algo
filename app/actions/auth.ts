@@ -4,7 +4,14 @@ import { prisma } from "@/lib/prisma"
 import { hashPassword } from "@/lib/password"
 import { redirect } from "next/navigation"
 
-export async function registerUser(formData: FormData) {
+export type RegistrationState = {
+  error?: string
+}
+
+export async function registerUser(
+  _previousState: RegistrationState,
+  formData: FormData,
+): Promise<RegistrationState> {
   const name = formData.get("name")
   const email = formData.get("email")
   const password = formData.get("password")
@@ -16,22 +23,22 @@ export async function registerUser(formData: FormData) {
     typeof password !== "string" ||
     typeof confirmPassword !== "string"
   ) {
-    throw new Error("Please fill out all fields.")
+    return { error: "Please fill out all fields." }
   }
 
   const trimmedName = name.trim()
   const trimmedEmail = email.trim().toLowerCase()
 
   if (!trimmedName || !trimmedEmail || !password || !confirmPassword) {
-    throw new Error("Please fill out all fields.")
+    return { error: "Please fill out all fields." }
   }
 
   if (password.length < 8) {
-    throw new Error("Password must be at least 8 characters long.")
+    return { error: "Password must be at least 8 characters long." }
   }
 
   if (password !== confirmPassword) {
-    throw new Error("Passwords do not match.")
+    return { error: "Passwords do not match." }
   }
 
   const existingUser = await prisma.user.findUnique({
@@ -39,16 +46,21 @@ export async function registerUser(formData: FormData) {
   })
 
   if (existingUser) {
-    throw new Error("An account with this email already exists.")
+    return { error: "An account with this email already exists." }
   }
 
-  await prisma.user.create({
-    data: {
-      name: trimmedName,
-      email: trimmedEmail,
-      password: hashPassword(password),
-    },
-  })
+  try {
+    await prisma.user.create({
+      data: {
+        name: trimmedName,
+        email: trimmedEmail,
+        password: hashPassword(password),
+      },
+    })
+  } catch (error) {
+    console.error("Registration failed", error)
+    return { error: "We could not create your account. Please try again." }
+  }
 
-  redirect("/api/auth/signin?callbackUrl=/onboarding")
+  redirect("/signin?callbackUrl=/onboarding")
 }
